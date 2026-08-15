@@ -3,477 +3,324 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LA MELO — Simulateur de Guerre</title>
+<title>LA MÉLO — RUN & GUN</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: radial-gradient(circle at 50% 0%, #1a2a1a, #0a0f0a 70%);
-    color:#e8e8e8;
-    font-family:"Segoe UI", Arial, sans-serif;
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:10px;
-  }
-  #app { width:100%; max-width:700px; }
-  .screen { display:none; }
-  .screen.active { display:block; animation:fade .4s ease; }
-  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1;} }
-
-  .panel {
-    background:linear-gradient(160deg, #1c2a1c, #121a12);
-    border:2px solid #3a5a3a;
-    border-radius:14px;
-    padding:22px;
-    box-shadow:0 0 30px rgba(60,160,60,.25);
-    text-align:center;
-  }
-
-  h1 {
-    font-size:52px;
-    letter-spacing:6px;
-    color:#7CFC00;
-    text-shadow:0 0 20px #32CD32, 0 0 40px #228B22;
-    margin-bottom:4px;
-  }
-  h2 { color:#9ACD32; margin:12px 0; letter-spacing:2px; }
-  .subtitle { color:#aaa; margin-bottom:18px; font-style:italic; }
-
-  .btn {
-    display:block; width:100%;
-    margin:10px 0; padding:14px;
-    font-size:17px; font-weight:bold;
-    color:#0a0f0a;
-    background:linear-gradient(180deg,#9ACD32,#556B2F);
-    border:none; border-radius:10px;
-    cursor:pointer; transition:.15s;
-    letter-spacing:1px;
-  }
-  .btn:hover { transform:scale(1.03); filter:brightness(1.15); }
-  .btn:active { transform:scale(.97); }
-  .btn.red  { background:linear-gradient(180deg,#cd5c5c,#8b0000); color:#fff; }
-  .btn.blue { background:linear-gradient(180deg,#4682B4,#1a3a5a); color:#fff; }
-  .btn.gold { background:linear-gradient(180deg,#ffd700,#b8860b); }
-  .btn.gray { background:linear-gradient(180deg,#555,#222); color:#ddd; }
-
-  .hud {
-    display:grid; grid-template-columns:1fr 1fr;
-    gap:10px; margin-bottom:14px;
-  }
-  .stat {
-    background:#0d140d; border:1px solid #2e4a2e;
-    border-radius:10px; padding:10px; text-align:center;
-  }
-  .stat .label { font-size:12px; color:#8a8a8a; text-transform:uppercase; }
-  .stat .value { font-size:18px; font-weight:bold; color:#7CFC00; }
-
-  .bar-wrap {
-    background:#1a1a1a; border-radius:8px;
-    height:20px; overflow:hidden; border:1px solid #333;
-  }
-  .bar { height:100%; transition:width .3s; }
-  .bar.hp { background:linear-gradient(90deg,#ff4444,#ff8800); }
-  .bar.xp { background:linear-gradient(90deg,#4169E1,#00BFFF); }
-  .bar.enemy { background:linear-gradient(90deg,#ff0000,#ff5555); }
-
-  .battle-box { background:#0b110b; border:1px solid #3a5a3a; border-radius:12px; padding:16px; margin:12px 0; }
-  .enemy-line { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-  .enemy-name { color:#ff6b6b; font-weight:bold; font-size:18px; }
-  .player-line { margin:10px 0; }
-
-  .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .actions .btn { margin:0; padding:10px; font-size:14px; }
-
-  .log {
-    background:#050a05; border:1px solid #2e4a2e;
-    border-radius:10px; padding:10px;
-    height:110px; overflow-y:auto;
-    font-size:14px; text-align:left;
-  }
-  .log .dmg { color:#ff7b7b; }
-  .log .heal { color:#7CFC00; }
-  .log .gold { color:#ffd700; }
-  .log .info { color:#87CEEB; }
-  .log .crit { color:#ff00ff; font-weight:bold; }
-
-  .rank { color:#DA70D6; font-weight:bold; }
-  .boss-banner {
-    background:linear-gradient(90deg,#3a0000,#7a0000,#3a0000);
-    color:#ffd700; font-weight:bold; padding:8px;
-    border-radius:8px; margin:8px 0; letter-spacing:2px;
-    animation:pulse 1s infinite;
-  }
-  @keyframes pulse { 50% { opacity:.6; } }
-
-  input[type=text] {
-    width:100%; padding:12px; font-size:17px;
-    background:#0d140d; color:#7CFC00;
-    border:2px solid #3a5a3a; border-radius:10px;
-    text-align:center; margin:10px 0; outline:none;
-  }
-  .small { font-size:13px; color:#888; margin-top:10px; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0f0a;color:#e8e8e8;font-family:"Segoe UI",Arial,sans-serif;
+       display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:8px}
+  #wrap{position:relative;width:min(900px,96vw);box-shadow:0 0 40px rgba(60,160,60,.3)}
+  canvas{width:100%;display:block;background:#000;border:2px solid #3a5a3a;border-radius:10px}
+  #hint{font-size:13px;color:#7CFC00;letter-spacing:1px;text-align:center}
+  #hint b{color:#ffd700}
+  #ov{position:absolute;inset:0;background:rgba(0,0,0,.82);display:none;flex-direction:column;
+       align-items:center;justify-content:center;text-align:center;border-radius:10px;z-index:10;padding:20px}
+  #ov h1{font-size:44px;color:#7CFC00;text-shadow:0 0 25px #32CD32;letter-spacing:4px;margin-bottom:6px}
+  #ov h2{color:#ffd700;margin:8px 0;letter-spacing:2px}
+  #ov p{color:#ccc;margin:4px 0;font-size:15px}
+  #ov .stat{color:#ffd700;font-size:18px;margin:10px 0}
+  #ov button{margin-top:18px;padding:14px 40px;font-size:17px;font-weight:bold;cursor:pointer;
+       background:linear-gradient(180deg,#9ACD32,#556B2F);color:#0a0f0a;border:none;border-radius:10px;letter-spacing:1px}
+  #ov button:hover{filter:brightness(1.2)}
+  #ov .small{font-size:12px;color:#888;margin-top:10px}
+  .k{color:#ff6b6b}.g{color:#7CFC00}.y{color:#ffd700}.c{color:#87CEEB}
 </style>
 </head>
 <body>
-<div id="app">
-
-  <!-- ═══════════════ MENU PRINCIPAL ═══════════════ -->
-  <div id="screen-menu" class="screen active">
-    <div class="panel">
-      <h1>LA MÉLO</h1>
-      <div class="subtitle">⚔ Simulateur de Guerre — 100 Niveaux ⚔</div>
-      <button class="btn" onclick="newGame()">🪖 Nouvelle Partie</button>
-      <button class="btn gold" onclick="loadGame()">📂 Charger la Sauvegarde</button>
-      <button class="btn red" onclick="confirm('Tu veux vraiment abandonner, soldat ?') || location.reload()">🚪 Quitter</button>
-      <div class="small">Grade, armes, armures, boss tous les 10 niveaux.<br>Sauvegarde automatique dans ton navigateur.</div>
-    </div>
+<div id="wrap">
+  <canvas id="cv" width="900" height="500"></canvas>
+  <div id="ov">
+    <h1 id="ov-title">LA MÉLO</h1>
+    <div id="ov-body"></div>
   </div>
-
-  <!-- ═══════════════ ÉCRAN JEU ═══════════════ -->
-  <div id="screen-game" class="screen">
-    <div class="panel">
-      <h2 id="game-title">—</h2>
-
-      <!-- HUD -->
-      <div class="hud" id="hud"></div>
-      <div class="bar-wrap" style="margin-bottom:4px;">
-        <div class="bar hp" id="hpbar"></div>
-      </div>
-      <div style="font-size:12px;color:#999;margin-bottom:6px;" id="hptext"></div>
-      <div class="bar-wrap" style="margin-bottom:14px;">
-        <div class="bar xp" id="xpbar"></div>
-      </div>
-
-      <!-- ZONE DE COMBAT -->
-      <div class="battle-box" id="battle"></div>
-
-      <!-- JOURNAL -->
-      <div class="log" id="log"></div>
-    </div>
-  </div>
-
-  <!-- ═══════════════ ARMURERIE ═══════════════ -->
-  <div id="screen-shop" class="screen">
-    <div class="panel">
-      <h2>🔧 ARMURERIE DE LA MÉLO</h2>
-      <div class="hud" id="shop-hud"></div>
-      <button class="btn" id="btn-weapon" onclick="buyWeapon()">—</button>
-      <button class="btn blue" id="btn-armor" onclick="buyArmor()">—</button>
-      <button class="btn gold" onclick="buyMedkit()">💊 Acheter une trousse de soin (75 or)</button>
-      <button class="btn gray" onclick="showScreen('game')">⬅ Retour au front</button>
-    </div>
-  </div>
-
 </div>
+<div id="hint"><b>ESPACE / ↑</b> sauter &nbsp;•&nbsp; <b>X ou CLIC SOURIS</b> tirer &nbsp;•&nbsp; le soldat court tout seul</div>
 
 <script>
-/* ═══════════════════ DONNÉES DU JEU ═══════════════════ */
-const RANKS = [
-  [0,"Recrue"],[5,"Soldat"],[10,"Caporal"],[15,"Sergent"],[25,"Adjudant"],
-  [35,"Lieutenant"],[45,"Capitaine"],[55,"Commandant"],[65,"Colonel"],
-  [75,"Général de brigade"],[85,"Général de division"],[95,"Général d'armée"],
-  [100,"LÉGENDE DE LA MÉLO"]
-];
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const OV=document.getElementById('ov'),OVT=document.getElementById('ov-title'),OVB=document.getElementById('ov-body');
+const W=cv.width,H=cv.height,GROUND=400;
+const G={state:'menu',level:1,maxLevel:10,dist:0,target:1400,kills:0,score:0,spawnT:0,boss:false,bossHp:0,bossMax:0,over:0,freeze:0};
+let P={x:120,y:GROUND-52,vy:0,w:34,h:52,hp:100,maxHp:100,fireCd:0,inv:0,onGround:true};
+let enemies=[],pBullets=[],eBullets=[],parts=[],picks=[];
+let firing=false,keys={};
 
-const WEAPONS = [
-  {name:"Pistolet M9", dmg:12, cost:0},
-  {name:"Fusil AK-47", dmg:22, cost:50},
-  {name:"Sniper AWM", dmg:35, cost:150},
-  {name:"Lance-grenades M79", dmg:50, cost:300},
-  {name:"Mitrailleuse M249", dmg:68, cost:500},
-  {name:"Lance-roquettes RPG-7", dmg:90, cost:800},
-  {name:"Canon anti-char", dmg:115, cost:1200},
-  {name:"Railgun tactique", dmg:145, cost:1800},
-  {name:"Système de missiles", dmg:180, cost:2500},
-  {name:"Artillerie orbitale", dmg:220, cost:3500},
-  {name:"Fusil à plasma MK-X", dmg:270, cost:5000},
-  {name:"Juggernaut Nucleon", dmg:320, cost:7000}
-];
+function pw(){return G.dist+P.x}                 // position monde du joueur
+function resetPlayer(){P.hp=P.maxHp=100;P.y=GROUND-52;P.vy=0;P.inv=0}
+function newGame(){G.state='play';G.level=1;G.dist=0;G.target=1400;G.kills=0;G.score=0;G.boss=false;G.spawnT=0;
+  enemies=[];pBullets=[];eBullets=[];parts=[];picks=[];resetPlayer();OV.style.display='none';}
 
-const ARMORS = [
-  {name:"Gilet tactique", def:10, cost:0},
-  {name:"Armure renforcée", def:25, cost:200},
-  {name:"Armure composite", def:45, cost:500},
-  {name:"Exosquelette léger", def:70, cost:900},
-  {name:"Armure réactive", def:100, cost:1500},
-  {name:"Exosquelette lourd", def:140, cost:2400},
-  {name:"Nanotechnologie", def:190, cost:4000},
-  {name:"Armure Titan", def:250, cost:6000}
-];
-
-const BOSSES = {
-  10:["GÉNÉRAL BRUTUS",600,30,300,400],
-  20:["COLONEL VIPÈRE",1400,45,500,700],
-  30:["COMMANDANT FALCON",2600,60,750,1000],
-  40:["TANK DU DÉSERT",4200,80,1000,1400],
-  50:["FORTERESSE VOLANTE",6500,100,1500,2000],
-  60:["CYBORG NULL",9500,120,2000,2800],
-  70:["SATELITE DE GUERRE",13500,150,2600,3800],
-  80:["GÉNÉRAL OMÉGA",18500,180,3400,5000],
-  90:["MÉGA RONGEUR",25000,220,4500,6500],
-  100:["L'EMPEREUR DE LA MÉLO",40000,280,10000,15000]
-};
-
-const ENEMY_TYPES = ["Fantassin ennemi","Tireur embusqué","Soldat d'élite","Bunker fortifié","Char de combat","Hélicoptère d'attaque"];
-
-/* ═══════════════════ ÉTAT DU JOUEUR ═══════════════════ */
-let P = null;
-let enemy = null;
-let defending = false;
-
-function defaultPlayer(name){
-  return {
-    name:name || "Commandant",
-    level:1, hp:100, maxHp:100,
-    gold:100, xp:0, xpNext:100,
-    weapon:0, armor:0, medkits:3,
-    kills:0, wins:0
-  };
+/* ---------- ENNEMIS ---------- */
+function spawnEnemy(){
+  const lv=G.level;
+  const t=Math.random();
+  let e={x:pw()+W+80+Math.random()*160,y:GROUND-46,w:30,h:46,hp:0,maxHp:0,dmg:0,shootT:0,type:'g',boss:false,walk:0};
+  if(G.boss)return;
+  if(t<0.55){e.type='g';e.hp=e.maxHp=22+lv*6;e.dmg=7+lv*1.5;e.shootT=1+Math.random()*0.8;e.speed=0.7;}
+  else if(t<0.85){e.type='s';e.hp=e.maxHp=16+lv*5;e.dmg=6+lv*1.2;e.shootT=0.8+Math.random()*0.5;e.speed=0;}
+  else{e.type='h';e.hp=e.maxHp=55+lv*14;e.dmg=10+lv*1.8;e.shootT=1.6+Math.random()*0.6;e.speed=0.35;e.w=42;e.h=56;e.y=GROUND-56;}
+  enemies.push(e);
+}
+function spawnBoss(){
+  G.boss=true;G.bossMax=G.bossHp=650+G.level*80;G.freeze=0;
+  enemies.push({x:pw()+760,y:GROUND-62,w:52,h:62,hp:650+G.level*80,maxHp:650+G.level*80,
+    dmg:12+G.level*1.5,shootT:0.8,type:'boss',speed:1.1,boss:true,phase:1});
 }
 
-function rankFor(lvl){
-  let r = RANKS[0][1];
-  for(const [l,n] of RANKS) if(lvl>=l) r=n;
-  return r;
+/* ---------- TIRS ---------- */
+function fire(){
+  if(P.fireCd>0)return;
+  P.fireCd=0.12;
+  pBullets.push({x:pw()+30,y:P.y+10,vx:14,vy:0});
+  for(let i=0;i<3;i++)parts.push({x:pw()+34,y:P.y+12,vx:3+Math.random()*2,vy:-1+Math.random()*2-1,l:6,c:'#ffd700'});
+  G.score+=1;
 }
-function critChance(){ return Math.min(0.05 + P.level*0.002, 0.30); }
+function enemyFire(e){
+  const dx=pw()-e.x,dy=(P.y+20)-(e.y+18),d=Math.hypot(dx,dy)||1;
+  const sp=3+Math.min(2.5,G.level*0.15);
+  eBullets.push({x:e.x+e.w/2,y:e.y+18,vx:dx/d*sp,vy:dy/d*sp});
+  parts.push({x:e.x+e.w/2,y:e.y+16,vx:-2,vy:0,l:5,c:'#ff5555'});
+}
 
-/* ═══════════════════ ENNEMIS ═══════════════════ */
-function makeEnemy(){
-  const b = BOSSES[P.level];
-  if(b) return {name:b[0], hp:b[1], maxHp:b[1], dmg:b[2], xp:b[3], gold:b[4], boss:true};
-  const baseHp = 18 + P.level*6;
-  const baseDmg = 4 + P.level*2;
-  const t = ENEMY_TYPES[Math.floor(Math.random()*ENEMY_TYPES.length)];
-  let hp=baseHp, dmg=baseDmg, mult=1;
-  switch(t){
-    case "Tireur embusqué":    hp=baseHp*0.7;  dmg=baseDmg*1.4; mult=1.1; break;
-    case "Soldat d'élite":     hp=baseHp*1.2;  dmg=baseDmg*1.1; mult=1.2; break;
-    case "Bunker fortifié":    hp=baseHp*1.8;  dmg=baseDmg*0.7; mult=1.4; break;
-    case "Char de combat":     hp=baseHp*2.2;  dmg=baseDmg*1.3; mult=1.8; break;
-    case "Hélicoptère d'attaque": hp=baseHp*1.5; dmg=baseDmg*1.8; mult=2.2; break;
+/* ---------- UPDATE ---------- */
+function update(dt){
+  if(G.state!=='play')return;
+  G.over+=dt;
+  if(G.boss){G.dist+=2.2;}else{G.dist+=3+Math.min(4,G.level*0.15);}   // course auto
+  P.fireCd-=dt;if(P.inv>0)P.inv-=dt;
+  // saut
+  if((keys[' ']||keys['ArrowUp']||keys['w']||keys['W'])&&P.onGround){P.vy=-12.5;P.onGround=false;}
+  P.vy+=0.55;P.y+=P.vy;
+  if(P.y>=GROUND-P.h){P.y=GROUND-P.h;P.vy=0;P.onGround=true;}
+  if(firing)fire();
+
+  // progression de niveau
+  if(!G.boss&&G.dist>=G.target){
+    if(G.level<G.maxLevel){levelUp();}
+    else{spawnBoss();logBoss();}
   }
-  return {
-    name:t, hp:Math.round(hp), maxHp:Math.round(hp),
-    dmg:Math.round(dmg),
-    xp:Math.round(20+P.level*3*mult),
-    gold:Math.round(15+P.level*2*mult),
-    boss:false
-  };
-}
+  // spawn
+  G.spawnT-=dt;
+  if(!G.boss&&G.spawnT<=0){spawnEnemy();G.spawnT=Math.max(0.7,1.5-G.level*0.07)*(0.7+Math.random()*0.6);}
 
-/* ═══════════════════ LOG & RENDU ═══════════════════ */
-function log(msg, cls){
-  const el = document.getElementById('log');
-  el.innerHTML += `<div class="${cls||'info'}">${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
-}
-
-function renderHUD(){
-  const w = WEAPONS[P.weapon], a = ARMORS[P.armor];
-  document.getElementById('game-title').innerHTML =
-    `🪖 ${P.name} — <span class="rank">${rankFor(P.level)}</span>`;
-  document.getElementById('hud').innerHTML = `
-    <div class="stat"><div class="label">Niveau</div><div class="value">${P.level}/100</div></div>
-    <div class="stat"><div class="label">Or</div><div class="value" style="color:#ffd700">${P.gold}</div></div>
-    <div class="stat"><div class="label">Arme</div><div class="value" style="font-size:13px">${w.name} (${w.dmg})</div></div>
-    <div class="stat"><div class="label">Armure</div><div class="value" style="font-size:13px">${a.name} (${a.def})</div></div>
-    <div class="stat"><div class="label">💊 Trousse</div><div class="value">${P.medkits}</div></div>
-    <div class="stat"><div class="label">Victoires / Élims</div><div class="value" style="font-size:13px">${P.wins} / ${P.kills}</div></div>`;
-  const hpPct = Math.max(0, P.hp/P.maxHp*100);
-  const xpPct = Math.min(100, P.xp/P.xpNext*100);
-  document.getElementById('hpbar').style.width = hpPct+'%';
-  document.getElementById('hptext').textContent = `PV : ${P.hp} / ${P.maxHp}`;
-  document.getElementById('xpbar').style.width = xpPct+'%';
-}
-
-function renderBattle(){
-  const b = document.getElementById('battle');
-  const ePct = Math.max(0, enemy.hp/enemy.maxHp*100);
-  const bossHTML = enemy.boss ? `<div class="boss-banner">☠ BOSS DU NIVEAU ${P.level} ☠</div>` : '';
-  b.innerHTML = `
-    ${bossHTML}
-    <div class="enemy-line">
-      <span class="enemy-name">${enemy.boss?'👹':'👤'} ${enemy.name}</span>
-      <span>${enemy.hp} / ${enemy.maxHp} PV</span>
-    </div>
-    <div class="bar-wrap"><div class="bar enemy" style="width:${ePct}%"></div></div>
-    <div class="player-line">💂 Vous : ${P.hp} / ${P.maxHp} PV</div>
-    <div class="actions">
-      <button class="btn" onclick="doAttack()">⚔ Attaquer</button>
-      <button class="btn blue" onclick="doPrecise()">🎯 Tir précis (50 or)</button>
-      <button class="btn gold" onclick="doMedkit()">💊 Soin (${P.medkits})</button>
-      <button class="btn gray" onclick="doDefend()">🛡 Défendre</button>
-    </div>`;
-}
-
-function renderShop(){
-  document.getElementById('shop-hud').innerHTML = `
-    <div class="stat"><div class="label">Or</div><div class="value" style="color:#ffd700">${P.gold}</div></div>
-    <div class="stat"><div class="label">Niveau</div><div class="value">${P.level}/100</div></div>`;
-  const nw = WEAPONS[P.weapon+1];
-  document.getElementById('btn-weapon').textContent = nw
-    ? `🔫 ${nw.name} (${nw.dmg} dégâts) — ${nw.cost} or`
-    : "🔫 Arme au MAXIMUM";
-  document.getElementById('btn-weapon').disabled = !nw || P.gold < nw.cost;
-  const na = ARMORS[P.armor+1];
-  document.getElementById('btn-armor').textContent = na
-    ? `🛡 ${na.name} (${na.def} défense) — ${na.cost} or`
-    : "🛡 Armure au MAXIMUM";
-  document.getElementById('btn-armor').disabled = !na || P.gold < na.cost;
-}
-
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+id).classList.add('active');
-  if(id==='game'){ renderHUD(); renderBattle(); }
-  if(id==='shop') renderShop();
-}
-
-/* ═══════════════════ COMBAT ═══════════════════ */
-function enemyTurn(){
-  if(enemy.hp<=0 || P.hp<=0) return;
-  let dmg = Math.max(1, enemy.dmg - ARMORS[P.armor].def);
-  if(defending) dmg = Math.max(1, Math.round(dmg*0.35));
-  P.hp -= dmg;
-  log(`☠ ${enemy.name} t'attaque : <span class="dmg">-${dmg} PV</span>`, 'dmg');
-  defending = false;
-  checkEnd();
-}
-
-function checkEnd(){
-  if(P.hp <= 0){
-    P.hp = 0;
-    renderHUD(); renderBattle();
-    log(`💀 <b>${P.name} est tombé au niveau ${P.level}...</b>`, 'crit');
-    log('🪖 La MÉLO se souviendra de toi.', 'info');
-    saveGame();
-    setTimeout(()=>showScreen('menu'), 2500);
-    return true;
+  // balles joueur
+  for(let i=pBullets.length-1;i>=0;i--){
+    const b=pBullets[i];b.x+=b.vx;b.y+=b.vy;
+    if(b.x>pw()+W+100){pBullets.splice(i,1);continue;}
+    let hit=false;
+    for(const e of enemies){
+      if(b.x>e.x&&b.x<e.x+e.w&&b.y>e.y&&b.y<e.y+e.h){e.hp-=12+G.level*2;hit=true;G.score+=5;
+        for(let k=0;k<4;k++)parts.push({x:b.x,y:b.y,vx:(Math.random()-0.5)*4,vy:-2-Math.random()*3,l:7,c:'#ff4444'});
+        if(e.hp<=0){killEnemy(e);}break;}
+    }
+    if(hit)pBullets.splice(i,1);
   }
-  if(enemy.hp <= 0){
-    P.kills++; P.wins++;
-    P.gold += enemy.gold;
-    log(`✅ VICTOIRE ! +<span class="gold">${enemy.gold} or</span>`, 'heal');
-    addXP(enemy.xp);
-    saveGame();
-    if(P.level>=100){ victory(); return true; }
-    setTimeout(()=>{ enemy = makeEnemy(); renderBattle(); }, 900);
-    return true;
+  // balles ennemies
+  for(let i=eBullets.length-1;i>=0;i--){
+    const b=eBullets[i];b.x+=b.vx;b.y+=b.vy;
+    if(b.x<pw()-200||b.x>pw()+W+200||b.y>H+50||b.y<-50){eBullets.splice(i,1);continue;}
+    if(P.inv<=0&&b.x>pw()-8&&b.x<pw()+P.w+8&&b.y>P.y&&b.y<P.y+P.h){hitPlayer(b.vx>0?1:-1);eBullets.splice(i,1);}
   }
-  return false;
-}
-
-function addXP(amount){
-  P.xp += amount;
-  while(P.xp >= P.xpNext){
-    P.xp -= P.xpNext;
-    P.level++;
-    P.maxHp += 15;
-    P.hp = P.maxHp;
-    P.xpNext = Math.round(P.xpNext*1.35);
-    log(`⬆ <b>NIVEAU ${P.level} !</b> +15 PV max`, 'heal');
-    if(P.level>=100){ P.level=100; break; }
+  // ennemis
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    if(e.type==='boss'){
+      const tx=pw()+300;
+      if(e.x>tx)e.x-=e.speed;else if(e.x<tx)e.x+=e.speed;
+      e.shootT-=dt;
+      if(e.shootT<=0){e.shootT=Math.max(0.45,1.1-G.bossHp/G.bossMax*0.5);
+        enemyFire(e);if(G.bossHp<G.bossMax*0.5)enemyFire(e);}  // phase 2 : double tir
+      if(P.inv<=0&&Math.abs(pw()-e.x)<55&&Math.abs(P.y+20-(e.y+30))<45){hitPlayer(1);}
+    }else{
+      e.x-=e.speed;e.shootT-=dt;
+      if(e.shootT<=0&&Math.abs(pw()-e.x)<520&&e.x>pw()+30){enemyFire(e);e.shootT=1.3+Math.random()*0.9;}
+      if(e.x<pw()-80){enemies.splice(i,1);continue;}
+      if(P.inv<=0&&Math.abs(pw()-e.x)<e.w-6&&Math.abs(P.y+20-(e.y+20))<40){hitPlayer(1);enemies.splice(i,1);}
+    }
   }
-  renderHUD();
+  // particules & soins
+  parts=parts.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.l-=dt;return p.l>0});
+  for(let i=picks.length-1;i>=0;i--){
+    const k=picks[i];k.y=Math.min(GROUND-18,k.y+2);
+    if(Math.abs(pw()-k.x)<30&&Math.abs(P.y+20-k.y)<40){P.hp=Math.min(P.maxHp,P.hp+25);k.taken=true;
+      logMsg('+25 PV (trousse)','g');}
+    if(k.taken)picks.splice(i,1);
+  }
+  if(P.hp<=0){gameOver();}
 }
-
+function killEnemy(e){
+  G.kills++;G.score+=50+10*G.level;
+  if(Math.random()<0.12)picks.push({x:e.x+e.w/2,y:e.y,type:'med',taken:false});
+  if(e.type==='boss'){victory();return;}
+  enemies.splice(enemies.indexOf(e),1);
+}
+function hitPlayer(dir){
+  if(G.boss)P.hp-=10+G.level*1.2;else P.hp-=7+G.level*1.2;
+  P.inv=0.8;P.x=Math.max(20,P.x-dir*6);
+  for(let i=0;i<8;i++)parts.push({x:pw()+20,y:P.y+20,vx:(Math.random()-0.5)*6,vy:-3-Math.random()*3,l:9,c:'#ff4444'});
+}
+function levelUp(){
+  G.level++;
+  G.dist=0;G.target=1400+G.level*220;
+  enemies=[];eBullets=[];
+  P.hp=Math.min(P.maxHp,P.hp+30);
+  G.freeze=1.6;G.state='levelup';
+  OVT.innerHTML='NIVEAU '+G.level;
+  OVB.innerHTML=`<p class="g">Zone sécurisée — progression vers le QG du Chef Bandit.</p>
+    <p class="c">OBJECTIF : parcourir ${G.target} m</p><p class="y">+30 PV</p>`;
+  OV.style.display='flex';
+  setTimeout(()=>{if(G.state==='levelup'){G.state='play';OV.style.display='none';}},1600);
+}
+function logBoss(){
+  G.state='levelup';G.freeze=1.8;
+  OVT.innerHTML='☠ ALERTE BOSS ☠';
+  OVB.innerHTML=`<p class="k">LE CHEF BANDIT est là ! Il défend son QG.</p><p>Il tire par rafales et devient plus rapide en phase 2.</p>`;
+  OV.style.display='flex';
+  setTimeout(()=>{if(G.state==='levelup'){G.state='play';OV.style.display='none';}},1800);
+}
 function victory(){
-  document.getElementById('battle').innerHTML =
-    `<h2 style="color:#ffd700">🏆🏆🏆</h2>
-     <h2 style="color:#7CFC00">FÉLICITATIONS, ${P.name} !</h2>
-     <p>Tu as conquis les <b>100 niveaux</b> de LA MÉLO.</p>
-     <p class="rank">LÉGENDE ÉTERNELLE</p>
-     <button class="btn gold" onclick="showScreen('menu')">🏆 Continuer en mode libre</button>`;
-  log('🏆 <b>100 NIVEAUX CONQUIS !</b>', 'crit');
+  G.state='victory';
+  OVT.innerHTML='🏆 MISSION ACCOMPLIE 🏆';
+  OVB.innerHTML=`<p class="g">Tu as éliminé <b>LE CHEF BANDIT</b> et libéré la zone !</p>
+    <div class="stat">Éliminations : ${G.kills} &nbsp;•&nbsp; Score : ${G.score}</div>
+    <p class="y">LEGEND OF LA MÉLO</p>
+    <button onclick="newGame()">🔄 REJOUER</button><p class="small">La MÉLO se souviendra de toi, soldat.</p>`;
+  OV.style.display='flex';
+}
+function gameOver(){
+  G.state='gameover';
+  OVT.innerHTML='💀 TU ES TOMBÉ 💀';
+  OVB.innerHTML=`<p class="k">Tu es mort au niveau ${G.level}, à ${Math.round(G.dist)}m de l'objectif.</p>
+    <div class="stat">Éliminations : ${G.kills} &nbsp;•&nbsp; Score : ${G.score}</div>
+    <button onclick="newGame()">🪖 NOUVELLE PARTIE</button>`;
+  OV.style.display='flex';
 }
 
-/* Actions du joueur */
-function doAttack(){
-  let dmg = Math.round(WEAPONS[P.weapon].dmg * (0.75 + Math.random()*0.5));
-  let crit = Math.random() < critChance();
-  if(crit) dmg = Math.round(dmg*2);
-  enemy.hp -= dmg;
-  log(`⚔ Tu infliges <span class="dmg">${dmg}</span> dégâts${crit?' <span class="crit">(CRITIQUE !)</span>':''}`);
-  renderBattle();
-  if(!checkEnd()) enemyTurn();
-}
+/* ---------- RENDU ---------- */
+function rnd(seed){let s=seed%10000;return function(){s=(s*9301+49297)%233280;return s/233280}}
+const skyR=rnd(7),bldR=rnd(13),crateR=rnd(29);
+function draw(){
+  // ciel
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,'#0c1a30');grd.addColorStop(0.6,'#22445c');grd.addColorStop(1,'#3a2a1a');
+  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,240,180,.9)';ctx.beginPath();ctx.arc(W-120,60,22,0,7);ctx.fill();
+  // immeubles lointains (parallaxe)
+  ctx.fillStyle='#16283a';
+  for(let i=0;i<14;i++){const x=((i*160-G.dist*0.3)%(W+320)+W+320)%(W+320)-160;
+    ctx.fillRect(x,GROUND-90-skyR(i)*70,90,120);}
+  // décors au sol
+  ctx.fillStyle='#1e2a1e';
+  for(let i=0;i<12;i++){const x=((i*220-G.dist*0.8)%(W+400)+W+400)%(W+400)-200;
+    ctx.fillRect(x,GROUND-14,26,18);}
+  // caisses
+  ctx.fillStyle='#6b4a2a';
+  for(let i=0;i<6;i++){const x=((i*330-G.dist)%(W+300)+W+300)%(W+300)-150;
+    ctx.fillRect(x,GROUND-24,34,26);ctx.strokeStyle='#3a2410';ctx.strokeRect(x,GROUND-24,34,26);}
+  // sol
+  ctx.fillStyle='#3a3a2a';ctx.fillRect(0,GROUND,W,H-GROUND);
+  ctx.strokeStyle='#2a2a1e';ctx.beginPath();
+  for(let x=-(G.dist%40);x<W;x+=40){ctx.moveTo(x,GROUND);ctx.lineTo(x,H);}ctx.stroke();
 
-function doPrecise(){
-  if(P.gold < 50){ log('❌ Pas assez d\'or (50 requis).','crit'); return; }
-  P.gold -= 50;
-  const dmg = Math.round(WEAPONS[P.weapon].dmg * 2.2);
-  enemy.hp -= dmg;
-  log(`🎯 TIR PRÉCIS : <span class="crit">${dmg}</span> dégâts garantis !`);
-  renderHUD(); renderBattle();
-  if(!checkEnd()) enemyTurn();
-}
+  // soins au sol
+  for(const k of picks){ctx.fillStyle='#fff';ctx.fillRect(k.x-G.dist-9,k.y-8,18,16);
+    ctx.fillStyle='#ff0000';ctx.fillRect(k.x-G.dist-6,k.y-5,12,10);ctx.fillStyle='#fff';
+    ctx.fillRect(k.x-G.dist-3,k.y-2,6,4);}
+  // ennemis
+  for(const e of enemies){
+    const sx=e.x-G.dist;
+    if(e.type==='boss'){
+      ctx.fillStyle='#3a0000';ctx.fillRect(sx-6,e.y-8,e.w+12,e.h+10);
+      ctx.fillStyle='#8b1a1a';ctx.fillRect(sx,e.y,e.w,e.h);
+      ctx.fillStyle='#ffd700';ctx.fillRect(sx+4,e.y+4,10,10);              // bandana
+      ctx.fillStyle='#e8e8e8';ctx.fillRect(sx+8,e.y+14,8,6);
+      ctx.fillStyle='#222';ctx.fillRect(sx+e.w-4,e.y+18,10,26);ctx.fillStyle='#555';ctx.fillRect(sx+e.w-4,e.y+18,4,26);
+      ctx.fillStyle='#ff6b6b';
+      ctx.fillRect(sx+4,e.y-16,e.w-8,6);
+      ctx.fillStyle='#900';ctx.fillRect(sx+4,e.y-16,(e.w-8)*(e.hp/e.maxHp),6);
+    }else{
+      ctx.fillStyle=e.type==='h'?'#3a3a5a':(e.type==='s'?'#2a4a2a':'#4a3a2a');
+      ctx.fillRect(sx,e.y,e.w,e.h);
+      ctx.fillStyle='#555';ctx.fillRect(sx+e.w/2-4,e.y-16,8,16);
+      ctx.fillStyle='#e8e8e8';ctx.fillRect(sx+e.w/2-3,e.y-13,6,5);
+      ctx.fillStyle='#111';ctx.fillRect(sx+e.w-6,e.y+14,10,20);ctx.fillStyle='#333';ctx.fillRect(sx+e.w-6,e.y+14,4,20);
+      ctx.fillStyle='#7a3a3a';ctx.fillRect(sx+6,e.y-5,e.w-12,4);
+    }
+  }
+  // joueur
+  const jx=P.x;
+  ctx.fillStyle=P.inv>0&&Math.floor(G.over*20)%2===0?'rgba(255,255,255,.35)':'#1a4a1a';
+  ctx.fillRect(jx-4,P.y-6,P.w+8,P.h+8);
+  ctx.fillStyle='#2a6a2a';ctx.fillRect(jx,P.y,P.w,P.h);
+  ctx.fillStyle='#1a3a1a';ctx.fillRect(jx+6,P.y+22,8,8);
+  ctx.fillStyle='#3a8a3a';ctx.fillRect(jx+8,P.y-12,P.w-4,12);              // casque
+  ctx.fillStyle='#0a1a0a';ctx.fillRect(jx+2,P.y+26,8,12);
+  ctx.fillStyle='#222';ctx.fillRect(jx+P.w-6,P.y+12,16,8);ctx.fillStyle='#444';ctx.fillRect(jx+P.w-6,P.y+12,5,8);
+  // flash bouche
+  if(P.fireCd>0.09)ctx.fillStyle='#ffd700';else ctx.fillStyle='#cc8800';
+  ctx.fillRect(jx+P.w+8,P.y+13,8,4);
+  // balles
+  ctx.fillStyle='#ffd700';for(const b of pBullets){ctx.fillRect(b.x-G.dist-5,b.y-2,10,4);ctx.fillRect(b.x-G.dist-9,b.y-2,3,2);}
+  ctx.fillStyle='#ff5555';for(const b of eBullets){ctx.beginPath();ctx.arc(b.x-G.dist,b.y,4,0,7);ctx.fill();
+    ctx.fillStyle='rgba(255,80,80,.5)';ctx.beginPath();ctx.arc(b.x-G.dist,b.y,7,0,7);ctx.fill();ctx.fillStyle='#ff5555';}
+  // particules
+  for(const p of parts){ctx.globalAlpha=Math.min(1,p.l);ctx.fillStyle=p.c;ctx.fillRect(p.x-G.dist-2,p.y-2,4,4);}
+  ctx.globalAlpha=1;
 
-function doMedkit(){
-  if(P.medkits<=0){ log('❌ Plus de trousse de soin !','crit'); return; }
-  P.medkits--;
-  const heal = Math.min(45, P.maxHp - P.hp);
-  P.hp += heal;
-  log(`💊 +${heal} PV restaurés.`, 'heal');
-  renderHUD(); renderBattle();
-  if(!checkEnd()) enemyTurn();
+  // HUD
+  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(8,8,250,86);
+  ctx.fillStyle='#7CFC00';ctx.font='bold 13px Arial';
+  ctx.fillText('NIVEAU '+G.level+'/10',16,26);
+  ctx.fillStyle='#ccc';ctx.font='11px Arial';
+  ctx.fillText('OBJECTIF : '+(G.boss?'ÉLIMINER LE CHEF BANDIT':Math.max(0,Math.round(G.target-G.dist))+' m restants'),16,42);
+  ctx.fillStyle='#ffd700';ctx.fillText('Score '+G.score+'   •   Élims '+G.kills,16,58);
+  ctx.fillStyle='#333';ctx.fillRect(16,64,232,10);
+  const hpPct=Math.max(0,P.hp/P.maxHp);
+  ctx.fillStyle=hpPct>0.3?'#ff8800':'#ff0000';ctx.fillRect(16,64,232*hpPct,10);
+  ctx.fillStyle='#fff';ctx.font='bold 9px Arial';ctx.fillText('PV '+Math.max(0,Math.round(P.hp))+'/'+P.maxHp,110,72);
+  // barre de progression
+  ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(W-260,8,252,14);
+  ctx.fillStyle='#4169E1';ctx.fillRect(W-258,10,248*Math.min(1,G.dist/G.target),10);
+  ctx.fillStyle='#fff';ctx.font='bold 9px Arial';ctx.fillText('PROGRESSION',W-190,17);
+  // boss bar
+  if(G.boss){ctx.fillStyle='rgba(0,0,0,.65)';ctx.fillRect(W/2-200,H-34,400,20);
+    ctx.fillStyle='#8b0000';ctx.fillRect(W/2-198,H-32,396*Math.max(0,G.bossHp/G.bossMax),16);
+    ctx.fillStyle='#ffd700';ctx.font='bold 12px Arial';ctx.textAlign='center';
+    ctx.fillText('☠ LE CHEF BANDIT ☠',W/2,H-19);ctx.textAlign='left';}
 }
+function logMsg(m,c){}
 
-function doDefend(){
-  defending = true;
-  log('🛡 Position défensive : dégâts subis réduits à 35%.','info');
-  enemyTurn();
+/* ---------- BOUCLE ---------- */
+let last=0;
+function loop(t){
+  const dt=Math.min(0.033,(t-last)/1000);last=t;
+  if(G.state==='play')update(dt);
+  draw();
+  requestAnimationFrame(loop);
 }
+requestAnimationFrame(loop);
 
-/* ═══════════════════ ARMURERIE ═══════════════════ */
-function buyWeapon(){
-  const nw = WEAPONS[P.weapon+1];
-  if(!nw){ log('Arme déjà max.','crit'); return; }
-  if(P.gold < nw.cost){ log('Pas assez d\'or.','crit'); return; }
-  P.gold -= nw.cost; P.weapon++;
-  log(`🔫 Nouvelle arme : <b>${nw.name}</b> !`,'gold');
-  renderShop();
-}
-function buyArmor(){
-  const na = ARMORS[P.armor+1];
-  if(!na){ log('Armure déjà max.','crit'); return; }
-  if(P.gold < na.cost){ log('Pas assez d\'or.','crit'); return; }
-  P.gold -= na.cost; P.armor++;
-  log(`🛡 Nouvelle armure : <b>${na.name}</b> !`,'gold');
-  renderShop();
-}
-function buyMedkit(){
-  if(P.gold<75){ log('Pas assez d\'or.','crit'); return; }
-  P.gold-=75; P.medkits++;
-  log('💊 +1 trousse de soin.','heal');
-  renderShop();
-}
+/* ---------- ENTREES ---------- */
+window.addEventListener('keydown',e=>{
+  keys[e.key]=true;
+  if(e.key===' ')e.preventDefault();
+  if(G.state==='menu'&&(e.key===' '||e.key==='Enter'))newGame();
+  if(G.state==='victory'||G.state==='gameover'){if(e.key==='Enter')newGame();}
+});
+window.addEventListener('keyup',e=>keys[e.key]=false);
+cv.addEventListener('mousedown',()=>firing=true);
+window.addEventListener('mouseup',()=>firing=false);
+cv.addEventListener('touchstart',e=>{e.preventDefault();firing=true;}, {passive:false});
+cv.addEventListener('touchend',()=>firing=false);
 
-/* ═══════════════════ SAUVEGARDE ═══════════════════ */
-function saveGame(){
-  try{ localStorage.setItem('lamelo_save', JSON.stringify(P)); }catch(e){}
-}
-function loadGame(){
-  try{
-    const d = JSON.parse(localStorage.getItem('lamelo_save'));
-    if(!d){ alert('Aucune sauvegarde trouvée. Nouvelle partie !'); return; }
-    P = d;
-    enemy = makeEnemy();
-    log(`📂 Bienvenue de retour, <b>${P.name}</b> !`, 'info');
-    showScreen('game');
-  }catch(e){ alert('Sauvegarde illisible.'); }
-}
-
-/* ═══════════════════ NOUVELLE PARTIE ═══════════════════ */
-function newGame(){
-  const name = prompt("Nom de ton commandant :", "Commandant") || "Commandant";
-  P = defaultPlayer(name);
-  enemy = makeEnemy();
-  document.getElementById('log').innerHTML = '';
-  log(`🪖 Bienvenue, <b>${name}</b>. La guerre commence. Niveau 1.`,'info');
-  showScreen('game');
-}
+/* ---------- MENU ---------- */
+OVT.innerHTML='LA MÉLO';
+OVB.innerHTML=`<p class="g">RUN & GUN — infiltration du territoire ennemi</p>
+  <p>Ton soldat court vers le QG. Des <span class="k">soldats ennemis</span> tirent sur toi.</p>
+  <p><b class="c">10 niveaux</b> puis le <span class="k">CHEF BANDIT</span> t'attend à la fin.</p>
+  <div class="stat">ESPACE = sauter &nbsp;•&nbsp; X / CLIC = tirer</div>
+  <button onclick="newGame()">🪖 COMMENCER LA MISSION</button>
+  <p class="small">Évite les balles en sautant, ramasse les trousses de soin (+25 PV).</p>`;
+OV.style.display='flex';
 </script>
 </body>
 </html>
