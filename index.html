@@ -1,0 +1,421 @@
+Voici un jeu de guerre complet en Python, nommé **LA MELO** — stratégie tour par tour, 100 niveaux, boss tous les 10 niveaux, grades militaires, armurerie, événements aléatoires et sauvegarde. Lance-le dans un terminal : `python3 la_melo.py`.
+
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+============================================
+            LA MELO — WAR SIMULATOR
+  Jeu de guerre stratégique — 100 niveaux
+  Auteur : HackerAI
+  Usage  : python3 la_melo.py
+============================================
+"""
+import json
+import os
+import random
+import sys
+import time
+
+# ---------------------------------------------------------------- couleurs
+class C:
+    R = "\033[91m"; G = "\033[92m"; Y = "\033[93m"; B = "\033[94m"
+    M = "\033[95m"; Cc = "\033[96m"; W = "\033[97m"; D = "\033[90m"
+    BOLD = "\033[1m"; RESET = "\033[0m"
+
+def c(text, color):
+    return f"{color}{text}{C.RESET}"
+
+def slow(text, delay=0.02):
+    for ch in text:
+        print(ch, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+# ---------------------------------------------------------------- grades
+RANKS = [
+    (0,   "Recrue"),        (5,   "Soldat"),       (10,  "Caporal"),
+    (15,  "Sergent"),       (25,  "Adjudant"),     (35,  "Lieutenant"),
+    (45,  "Capitaine"),     (55,  "Commandant"),   (65,  "Colonel"),
+    (75,  "Général de brigade"), (85, "Général de division"),
+    (95,  "Général d'armée"),    (100, "LÉGENDE DE LA MÉLO"),
+]
+
+def rank_for(level):
+    r = RANKS[0][1]
+    for lvl, name in RANKS:
+        if level >= lvl:
+            r = name
+    return r
+
+# ---------------------------------------------------------------- armes
+WEAPONS = {
+    1:  ("Pistolet M9",         12,  0),
+    5:  ("Fusil d'assaut AK-47", 22, 50),
+    10: ("Fusil de sniper AWM",  35, 150),
+    20: ("Lance-grenades M79",   50, 300),
+    30: ("Mitrailleuse M249",    68, 500),
+    40: ("Lance-roquettes RPG-7", 90, 800),
+    50: ("Canon anti-char",      115, 1200),
+    60: ("Railgun tactique",     145, 1800),
+    70: ("Système de missiles",  180, 2500),
+    80: ("Artillerie orbitale",  220, 3500),
+    90: ("Fusil à plasma MK-X",  270, 5000),
+    100:("Juggernaut Nucleon",   320, 7000),
+}
+
+# ---------------------------------------------------------------- armures
+ARMORS = {
+    1:  ("Gilet tactique",       10, 0),
+    10: ("Armure renforcée",     25, 200),
+    20: ("Armure composite",     45, 500),
+    35: ("Exosquelette léger",   70, 900),
+    50: ("Armure réactive",      100, 1500),
+    65: ("Exosquelette lourd",   140, 2400),
+    80: ("Nanotechnologie",      190, 4000),
+    95: ("Armure Titan",         250, 6000),
+}
+
+# ---------------------------------------------------------------- types d'ennemis
+def enemy_pool(level):
+    """Liste (nom, hp, dmg, xp, gold) des ennemis possibles au niveau donné."""
+    base_hp = 18 + level * 6
+    base_dmg = 4 + level * 2
+    return [
+        ("Fantassin ennemi",   base_hp,           base_dmg,          20 + level*3,  15 + level*2),
+        ("Tireur embusqué",    int(base_hp*0.7),  int(base_dmg*1.4), 25 + level*3,  20 + level*2),
+        ("Soldat d'élite",     int(base_hp*1.2),  int(base_dmg*1.1), 30 + level*3,  25 + level*2),
+        ("Bunker fortifié",    int(base_hp*1.8),  int(base_dmg*0.7), 35 + level*4,  35 + level*3),
+        ("Char de combat",     int(base_hp*2.2),  int(base_dmg*1.3), 50 + level*4,  50 + level*3),
+        ("Hélicoptère d'attaque", int(base_hp*1.5), int(base_dmg*1.8), 60 + level*5, 60 + level*4),
+    ]
+
+def boss_for(level):
+    """Boss tous les 10 niveaux."""
+    bosses = {
+        10:  ("GÉNÉRAL BRUTUS",     600,  30, 300, 400),
+        20:  ("COLONEL VIPÈRE",     1400, 45, 500, 700),
+        30:  ("COMMANDANT FALCON",  2600, 60, 750, 1000),
+        40:  ("TANK DU DÉSERT",     4200, 80, 1000, 1400),
+        50:  ("FORTERESSE VOLANTE", 6500, 100, 1500, 2000),
+        60:  ("CYBORG NULL",        9500, 120, 2000, 2800),
+        70:  ("SATELITE DE GUERRE", 13500, 150, 2600, 3800),
+        80:  ("GÉNÉRAL OMÉGA",      18500, 180, 3400, 5000),
+        90:  ("MÉGA RONGEUR",       25000, 220, 4500, 6500),
+        100: ("L'EMPEREUR DE LA MÉLO", 40000, 280, 10000, 15000),
+    }
+    return bosses.get(level)
+
+# ---------------------------------------------------------------- joueur
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.level = 1
+        self.hp = 100
+        self.max_hp = 100
+        self.gold = 100
+        self.xp = 0
+        self.xp_next = 100
+        self.weapon = 1
+        self.armor = 1
+        self.medkits = 3
+        self.kills = 0
+        self.wins = 0
+
+    @property
+    def weapon_name(self): return WEAPONS[self.weapon][0]
+
+    @property
+    def weapon_damage(self): return WEAPONS[self.weapon][1]
+
+    @property
+    def armor_name(self): return ARMORS[self.armor][0]
+
+    @property
+    def armor_defense(self): return ARMORS[self.armor][1]
+
+    @property
+    def crit_chance(self): return min(0.05 + self.level * 0.002, 0.30)
+
+    def attack(self):
+        dmg = random.randint(int(self.weapon_damage * 0.75),
+                             int(self.weapon_damage * 1.25))
+        crit = random.random() < self.crit_chance
+        if crit:
+            dmg = int(dmg * 2)
+        return dmg, crit
+
+    def take_damage(self, dmg):
+        reduced = max(1, dmg - self.armor_defense)
+        self.hp -= reduced
+        return reduced
+
+    def heal(self, amount=45):
+        before = self.hp
+        self.hp = min(self.max_hp, self.hp + amount)
+        return self.hp - before
+
+    def add_xp(self, amount):
+        self.xp += amount
+        leveled = False
+        while self.xp >= self.xp_next:
+            self.xp -= self.xp_next
+            self.level += 1
+            self.max_hp += 15
+            self.hp = self.max_hp
+            self.xp_next = int(self.xp_next * 1.35)
+            leveled = True
+            if self.level >= 100:
+                self.level = 100
+                break
+        return leveled
+
+    def status(self):
+        print(f"\n{C.Cc}══════════════════════════════════════════════{C.RESET}")
+        print(f"{C.BOLD}{C.W}   {self.name}{C.RESET} — {C.M}Grade : {rank_for(self.level)}{C.RESET}")
+        print(f"{C.B}   Niveau {self.level}/100   XP {self.xp}/{self.xp_next}{C.RESET}")
+        bar = "█" * (self.hp * 20 // self.max_hp)
+        print(f"{C.G}   PV {self.hp}/{self.max_hp}  [{bar:<20}]{C.RESET}")
+        print(f"{C.Y}   Arme : {self.weapon_name} ({self.weapon_damage} dégâts)"
+              f"   Armure : {self.armor_name} ({self.armor_defense} défense){C.RESET}")
+        print(f"{C.Y}   Or : {self.gold}   Trousse de soin : {self.medkits}"
+              f"   Victoires : {self.wins}   Éliminations : {self.kills}{C.RESET}")
+        print(f"{C.Cc}══════════════════════════════════════════════{C.RESET}")
+
+# ---------------------------------------------------------------- combat
+def battle(player, enemy_name, enemy_hp, enemy_dmg, xp_reward, gold_reward, is_boss=False):
+    print(f"\n{C.R}⚔  COMBAT : {enemy_name} ⚔{C.RESET}")
+    if is_boss:
+        slow(c(f"☠  {C.BOLD}ATTENTION : BOSS DU NIVEAU {player.level} ! ☠{C.RESET}", C.R), 0.05)
+    turn = 0
+    while enemy_hp > 0 and player.hp > 0:
+        turn += 1
+        ebar = "█" * (enemy_hp * 20 // max(enemy_hp, 1))
+        pbar = "█" * (player.hp * 20 // player.max_hp)
+        print(f"\n{C.D}── Tour {turn} ─────────────────────────────{C.RESET}")
+        print(f"{C.R}Ennemi [{enemy_name}] : {enemy_hp} PV [{ebar:<20}]{C.RESET}")
+        print(f"{C.G}Vous : {player.hp} PV [{pbar:<20}]{C.RESET}")
+        print(f"{C.B}1. Attaquer   2. Tir précis (50 or)   3. Trousse de soin"
+              f" ({player.medkits})   4. Défendre   5. Fuir{C.RESET}")
+        choice = input("➤ Votre action : ").strip()
+
+        if choice == "1":
+            dmg, crit = player.attack()
+            enemy_hp -= dmg
+            print(c(f"  💥 Vous infligez {dmg} dégâts" + (" (CRITIQUE !)" if crit else ""),
+                    C.G if crit else C.W))
+            if enemy_hp > 0:
+                d = player.take_damage(enemy_dmg)
+                print(c(f"  ☠ L'ennemi riposte : {d} dégâts subis", C.R))
+
+        elif choice == "2":
+            if player.gold >= 50:
+                player.gold -= 50
+                dmg = int(player.weapon_damage * 2.2)
+                enemy_hp -= dmg
+                print(c(f"  🎯 TIR PRÉCIS ! {dmg} dégâts garantis.", C.Cc))
+                if enemy_hp > 0:
+                    d = player.take_damage(enemy_dmg)
+                    print(c(f"  ☠ L'ennemi riposte : {d} dégâts subis", C.R))
+            else:
+                print(c("  Pas assez d'or (50 requis).", C.R))
+                continue
+
+        elif choice == "3":
+            if player.medkits > 0:
+                player.medkits -= 1
+                healed = player.heal()
+                print(c(f"  💊 +{healed} PV restaurés.", C.G))
+            else:
+                print(c("  Plus de trousse de soin !", C.R))
+                continue
+
+        elif choice == "4":
+            d = player.take_damage(int(enemy_dmg * 0.35))
+            print(c(f"  🛡 Position défensive : seulement {d} dégâts subis.", C.B))
+
+        elif choice == "5":
+            if random.random() < 0.5:
+                print(c("  🏃 Vous parvenez à fuir (retour au camp).", C.Y))
+                return "fled"
+            print(c("  🚫 Fuite ratée ! L'ennemi vous attrape.", C.R))
+            d = player.take_damage(enemy_dmg)
+            print(c(f"  ☠ {d} dégâts subis.", C.R))
+        else:
+            print(c("  Commande invalide.", C.R))
+
+    if player.hp <= 0:
+        return "dead"
+    player.kills += 1
+    player.wins += 1
+    player.gold += gold_reward
+    leveled = player.add_xp(xp_reward)
+    print(c(f"\n✅ VICTOIRE ! +{xp_reward} XP, +{gold_reward} or.", C.G))
+    if leveled:
+        print(c(f"⬆  NIVEAU SUPÉRIEUR ! Vous êtes maintenant niveau {player.level} !", C.M))
+        if player.level % 10 == 0:
+            print(c(f"⭐ NOUVEAU GRADE : {rank_for(player.level)} ⭐", C.M))
+    return "win"
+
+# ---------------------------------------------------------------- boutique
+def shop(player):
+    while True:
+        player.status()
+        print(f"\n{C.Cc}═══ ARMURERIE DE LA MÉLO ═══{C.RESET}")
+        print(f"{C.B}1. Améliorer l'arme (prochaine : {WEAPONS.get(player.weapon+1, ('MAX',0,0))[0]}){C.RESET}")
+        print(f"{C.B}2. Améliorer l'armure (prochaine : {ARMORS.get(player.armor+1, ('MAX',0,0))[0]}){C.RESET}")
+        print(f"{C.G}3. Acheter une trousse de soin (75 or){C.RESET}")
+        print(f"{C.R}4. Quitter l'armurerie{C.RESET}")
+        choice = input("➤ Choix : ").strip()
+
+        if choice == "1":
+            nxt = WEAPONS.get(player.weapon + 1)
+            if not nxt:
+                print(c("  Arme déjà au maximum !", C.R))
+            elif player.gold >= nxt[2]:
+                player.gold -= nxt[2]
+                player.weapon += 1
+                print(c(f"  🔫 Nouvelle arme : {nxt[0]} !", C.G))
+            else:
+                print(c(f"  Pas assez d'or ({nxt[2]} requis).", C.R))
+
+        elif choice == "2":
+            nxt = ARMORS.get(player.armor + 1)
+            if not nxt:
+                print(c("  Armure déjà au maximum !", C.R))
+            elif player.gold >= nxt[2]:
+                player.gold -= nxt[2]
+                player.armor += 1
+                print(c(f"  🛡 Nouvelle armure : {nxt[0]} !", C.G))
+            else:
+                print(c(f"  Pas assez d'or ({nxt[2]} requis).", C.R))
+
+        elif choice == "3":
+            if player.gold >= 75:
+                player.gold -= 75
+                player.medkits += 1
+                print(c("  💊 +1 trousse de soin.", C.G))
+            else:
+                print(c("  Pas assez d'or.", C.R))
+
+        elif choice == "4":
+            return
+        else:
+            print(c("  Commande invalide.", C.R))
+
+# ---------------------------------------------------------------- événements aléatoires
+def random_event(player):
+    events = [
+        ("🪂 Un ravitaillement allié tombe du ciel !", lambda: setattr(player, 'medkits', player.medkits + 1)),
+        ("📡 Vous interceptez des plans ennemis : +150 or.", lambda: setattr(player, 'gold', player.gold + 150)),
+        ("🏥 Les médecins militaires vous soignent totalement.", lambda: setattr(player, 'hp', player.max_hp)),
+        ("🔧 L'ingénieur améliore votre armure : +30 défense temporaire (permanent).",
+         lambda: setattr(player, 'armor', player.armor) or player.__setattr__('_bonus_def', getattr(player, '_bonus_def', 0) + 30)),
+        ("🎖 Une mission bonus réussie : +200 XP.", lambda: player.add_xp(200)),
+    ]
+    text, effect = random.choice(events)
+    print(c(f"\n✨ ÉVÉNEMENT : {text}", C.M))
+    effect()
+    time.sleep(1)
+
+# ---------------------------------------------------------------- sauvegarde
+def save(player, filename="la_melo_save.json"):
+    data = {k: v for k, v in vars(player).items() if not k.startswith("_")}
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(c(f"\n💾 Partie sauvegardée dans {filename}", C.B))
+
+def load(filename="la_melo_save.json"):
+    if not os.path.exists(filename):
+        return None
+    with open(filename, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    p = Player(data["name"])
+    p.__dict__.update(data)
+    print(c(f"\n📂 Partie chargée — bienvenue de retour, {p.name} !", C.G))
+    return p
+
+# ---------------------------------------------------------------- menu principal
+def main():
+    print(c(f"""
+{C.BOLD}{C.Cc}
+╔══════════════════════════════════════════════════╗
+║                                                  ║
+║        ██╗      █████╗    ███╗   ███╗███████╗    ║
+║        ██║     ██╔══██╗   ████╗ ████║██╔════╝    ║
+║        ██║     ███████║   ██╔████╔██║█████╗      ║
+║        ██║     ██╔══██║   ██║╚██╔╝██║██╔══╝      ║
+║        ███████╗██║  ██║   ██║ ╚═╝ ██║███████╗    ║
+║        ╚══════╝╚═╝  ╚═╝   ╚═╝     ╚═╝╚══════╝    ║
+║                                                  ║
+║        SIMULATEUR DE GUERRE — 100 NIVEAUX        ║
+╚══════════════════════════════════════════════════╝{C.RESET}
+""")
+    print(f"{C.Y}1. Nouvelle partie")
+    print(f"2. Charger la sauvegarde")
+    print(f"3. Quitter{C.RESET}")
+    choice = input("➤ Choix : ").strip()
+
+    player = None
+    if choice == "2":
+        player = load()
+        if not player:
+            print(c("  Aucune sauvegarde trouvée. Nouvelle partie !", C.R))
+    if choice == "3":
+        sys.exit(0)
+    if player is None:
+        name = input("➤ Nom de votre commandant : ").strip() or "Commandant"
+        player = Player(name)
+
+    # ---------------------------------------------------------- boucle de jeu
+    while player.level <= 100 and player.hp > 0:
+        player.status()
+        print(f"\n{C.B}── ZONE DE COMBAT — Niveau {player.level} ──{C.RESET}")
+        print(f"{C.Y}1. Partir au combat   2. Armurerie   3. Sauvegarder   4. Quitter{C.RESET}")
+        choice = input("➤ Choix : ").strip()
+
+        if choice == "1":
+            if random.random() < 0.15:
+                random_event(player)
+            boss = boss_for(player.level)
+            if boss:
+                result = battle(player, boss[0], boss[1], boss[2], boss[3], boss[4], is_boss=True)
+            else:
+                pool = enemy_pool(player.level)
+                e = random.choice(pool)
+                result = battle(player, e[0], e[1], e[2], e[3], e[4])
+            if result == "dead":
+                print(c(f"\n💀 {player.name} est tombé au combat au niveau {player.level}...", C.R))
+                print(c("La MÉLO se souviendra de vous. 🪖", C.D))
+                save(player)
+                break
+            if result == "fled":
+                continue
+            if player.level >= 100 and player.wins >= 1:
+                print(c(f"\n🏆🏆🏆 {C.BOLD}FÉLICITATIONS, {player.name} !{C.RESET} {C.M}"
+                        f"Vous avez conquis les 100 niveaux de LA MÉLO ! LÉGENDE ÉTERNELLE !{C.RESET} 🏆🏆🏆", C.Y))
+                break
+
+        elif choice == "2":
+            shop(player)
+
+        elif choice == "3":
+            save(player)
+
+        elif choice == "4":
+            save(player)
+            print(c("Fin de la mission. À bientôt, soldat.", C.D))
+            break
+        else:
+            print(c("  Commande invalide.", C.R))
+
+    print(c("\nMerci d'avoir joué à LA MELO.", C.D))
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(c("\n\nInterruption. Au revoir, soldat. 🪖", C.Y))
+</｜｜DSML｜｜parameter>
+</｜｜DSML｜｜invoke>
+</｜｜DSML｜｜tool_calls>
