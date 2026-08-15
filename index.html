@@ -1,421 +1,479 @@
-Voici un jeu de guerre complet en Python, nommé **LA MELO** — stratégie tour par tour, 100 niveaux, boss tous les 10 niveaux, grades militaires, armurerie, événements aléatoires et sauvegarde. Lance-le dans un terminal : `python3 la_melo.py`.
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA MELO — Simulateur de Guerre</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: radial-gradient(circle at 50% 0%, #1a2a1a, #0a0f0a 70%);
+    color:#e8e8e8;
+    font-family:"Segoe UI", Arial, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:10px;
+  }
+  #app { width:100%; max-width:700px; }
+  .screen { display:none; }
+  .screen.active { display:block; animation:fade .4s ease; }
+  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1;} }
 
-```python
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-============================================
-            LA MELO — WAR SIMULATOR
-  Jeu de guerre stratégique — 100 niveaux
-  Auteur : HackerAI
-  Usage  : python3 la_melo.py
-============================================
-"""
-import json
-import os
-import random
-import sys
-import time
+  .panel {
+    background:linear-gradient(160deg, #1c2a1c, #121a12);
+    border:2px solid #3a5a3a;
+    border-radius:14px;
+    padding:22px;
+    box-shadow:0 0 30px rgba(60,160,60,.25);
+    text-align:center;
+  }
 
-# ---------------------------------------------------------------- couleurs
-class C:
-    R = "\033[91m"; G = "\033[92m"; Y = "\033[93m"; B = "\033[94m"
-    M = "\033[95m"; Cc = "\033[96m"; W = "\033[97m"; D = "\033[90m"
-    BOLD = "\033[1m"; RESET = "\033[0m"
+  h1 {
+    font-size:52px;
+    letter-spacing:6px;
+    color:#7CFC00;
+    text-shadow:0 0 20px #32CD32, 0 0 40px #228B22;
+    margin-bottom:4px;
+  }
+  h2 { color:#9ACD32; margin:12px 0; letter-spacing:2px; }
+  .subtitle { color:#aaa; margin-bottom:18px; font-style:italic; }
 
-def c(text, color):
-    return f"{color}{text}{C.RESET}"
+  .btn {
+    display:block; width:100%;
+    margin:10px 0; padding:14px;
+    font-size:17px; font-weight:bold;
+    color:#0a0f0a;
+    background:linear-gradient(180deg,#9ACD32,#556B2F);
+    border:none; border-radius:10px;
+    cursor:pointer; transition:.15s;
+    letter-spacing:1px;
+  }
+  .btn:hover { transform:scale(1.03); filter:brightness(1.15); }
+  .btn:active { transform:scale(.97); }
+  .btn.red  { background:linear-gradient(180deg,#cd5c5c,#8b0000); color:#fff; }
+  .btn.blue { background:linear-gradient(180deg,#4682B4,#1a3a5a); color:#fff; }
+  .btn.gold { background:linear-gradient(180deg,#ffd700,#b8860b); }
+  .btn.gray { background:linear-gradient(180deg,#555,#222); color:#ddd; }
 
-def slow(text, delay=0.02):
-    for ch in text:
-        print(ch, end="", flush=True)
-        time.sleep(delay)
-    print()
+  .hud {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:10px; margin-bottom:14px;
+  }
+  .stat {
+    background:#0d140d; border:1px solid #2e4a2e;
+    border-radius:10px; padding:10px; text-align:center;
+  }
+  .stat .label { font-size:12px; color:#8a8a8a; text-transform:uppercase; }
+  .stat .value { font-size:18px; font-weight:bold; color:#7CFC00; }
 
-# ---------------------------------------------------------------- grades
-RANKS = [
-    (0,   "Recrue"),        (5,   "Soldat"),       (10,  "Caporal"),
-    (15,  "Sergent"),       (25,  "Adjudant"),     (35,  "Lieutenant"),
-    (45,  "Capitaine"),     (55,  "Commandant"),   (65,  "Colonel"),
-    (75,  "Général de brigade"), (85, "Général de division"),
-    (95,  "Général d'armée"),    (100, "LÉGENDE DE LA MÉLO"),
-]
+  .bar-wrap {
+    background:#1a1a1a; border-radius:8px;
+    height:20px; overflow:hidden; border:1px solid #333;
+  }
+  .bar { height:100%; transition:width .3s; }
+  .bar.hp { background:linear-gradient(90deg,#ff4444,#ff8800); }
+  .bar.xp { background:linear-gradient(90deg,#4169E1,#00BFFF); }
+  .bar.enemy { background:linear-gradient(90deg,#ff0000,#ff5555); }
 
-def rank_for(level):
-    r = RANKS[0][1]
-    for lvl, name in RANKS:
-        if level >= lvl:
-            r = name
-    return r
+  .battle-box { background:#0b110b; border:1px solid #3a5a3a; border-radius:12px; padding:16px; margin:12px 0; }
+  .enemy-line { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .enemy-name { color:#ff6b6b; font-weight:bold; font-size:18px; }
+  .player-line { margin:10px 0; }
 
-# ---------------------------------------------------------------- armes
-WEAPONS = {
-    1:  ("Pistolet M9",         12,  0),
-    5:  ("Fusil d'assaut AK-47", 22, 50),
-    10: ("Fusil de sniper AWM",  35, 150),
-    20: ("Lance-grenades M79",   50, 300),
-    30: ("Mitrailleuse M249",    68, 500),
-    40: ("Lance-roquettes RPG-7", 90, 800),
-    50: ("Canon anti-char",      115, 1200),
-    60: ("Railgun tactique",     145, 1800),
-    70: ("Système de missiles",  180, 2500),
-    80: ("Artillerie orbitale",  220, 3500),
-    90: ("Fusil à plasma MK-X",  270, 5000),
-    100:("Juggernaut Nucleon",   320, 7000),
+  .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .actions .btn { margin:0; padding:10px; font-size:14px; }
+
+  .log {
+    background:#050a05; border:1px solid #2e4a2e;
+    border-radius:10px; padding:10px;
+    height:110px; overflow-y:auto;
+    font-size:14px; text-align:left;
+  }
+  .log .dmg { color:#ff7b7b; }
+  .log .heal { color:#7CFC00; }
+  .log .gold { color:#ffd700; }
+  .log .info { color:#87CEEB; }
+  .log .crit { color:#ff00ff; font-weight:bold; }
+
+  .rank { color:#DA70D6; font-weight:bold; }
+  .boss-banner {
+    background:linear-gradient(90deg,#3a0000,#7a0000,#3a0000);
+    color:#ffd700; font-weight:bold; padding:8px;
+    border-radius:8px; margin:8px 0; letter-spacing:2px;
+    animation:pulse 1s infinite;
+  }
+  @keyframes pulse { 50% { opacity:.6; } }
+
+  input[type=text] {
+    width:100%; padding:12px; font-size:17px;
+    background:#0d140d; color:#7CFC00;
+    border:2px solid #3a5a3a; border-radius:10px;
+    text-align:center; margin:10px 0; outline:none;
+  }
+  .small { font-size:13px; color:#888; margin-top:10px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════ MENU PRINCIPAL ═══════════════ -->
+  <div id="screen-menu" class="screen active">
+    <div class="panel">
+      <h1>LA MÉLO</h1>
+      <div class="subtitle">⚔ Simulateur de Guerre — 100 Niveaux ⚔</div>
+      <button class="btn" onclick="newGame()">🪖 Nouvelle Partie</button>
+      <button class="btn gold" onclick="loadGame()">📂 Charger la Sauvegarde</button>
+      <button class="btn red" onclick="confirm('Tu veux vraiment abandonner, soldat ?') || location.reload()">🚪 Quitter</button>
+      <div class="small">Grade, armes, armures, boss tous les 10 niveaux.<br>Sauvegarde automatique dans ton navigateur.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ÉCRAN JEU ═══════════════ -->
+  <div id="screen-game" class="screen">
+    <div class="panel">
+      <h2 id="game-title">—</h2>
+
+      <!-- HUD -->
+      <div class="hud" id="hud"></div>
+      <div class="bar-wrap" style="margin-bottom:4px;">
+        <div class="bar hp" id="hpbar"></div>
+      </div>
+      <div style="font-size:12px;color:#999;margin-bottom:6px;" id="hptext"></div>
+      <div class="bar-wrap" style="margin-bottom:14px;">
+        <div class="bar xp" id="xpbar"></div>
+      </div>
+
+      <!-- ZONE DE COMBAT -->
+      <div class="battle-box" id="battle"></div>
+
+      <!-- JOURNAL -->
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ARMURERIE ═══════════════ -->
+  <div id="screen-shop" class="screen">
+    <div class="panel">
+      <h2>🔧 ARMURERIE DE LA MÉLO</h2>
+      <div class="hud" id="shop-hud"></div>
+      <button class="btn" id="btn-weapon" onclick="buyWeapon()">—</button>
+      <button class="btn blue" id="btn-armor" onclick="buyArmor()">—</button>
+      <button class="btn gold" onclick="buyMedkit()">💊 Acheter une trousse de soin (75 or)</button>
+      <button class="btn gray" onclick="showScreen('game')">⬅ Retour au front</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════ DONNÉES DU JEU ═══════════════════ */
+const RANKS = [
+  [0,"Recrue"],[5,"Soldat"],[10,"Caporal"],[15,"Sergent"],[25,"Adjudant"],
+  [35,"Lieutenant"],[45,"Capitaine"],[55,"Commandant"],[65,"Colonel"],
+  [75,"Général de brigade"],[85,"Général de division"],[95,"Général d'armée"],
+  [100,"LÉGENDE DE LA MÉLO"]
+];
+
+const WEAPONS = [
+  {name:"Pistolet M9", dmg:12, cost:0},
+  {name:"Fusil AK-47", dmg:22, cost:50},
+  {name:"Sniper AWM", dmg:35, cost:150},
+  {name:"Lance-grenades M79", dmg:50, cost:300},
+  {name:"Mitrailleuse M249", dmg:68, cost:500},
+  {name:"Lance-roquettes RPG-7", dmg:90, cost:800},
+  {name:"Canon anti-char", dmg:115, cost:1200},
+  {name:"Railgun tactique", dmg:145, cost:1800},
+  {name:"Système de missiles", dmg:180, cost:2500},
+  {name:"Artillerie orbitale", dmg:220, cost:3500},
+  {name:"Fusil à plasma MK-X", dmg:270, cost:5000},
+  {name:"Juggernaut Nucleon", dmg:320, cost:7000}
+];
+
+const ARMORS = [
+  {name:"Gilet tactique", def:10, cost:0},
+  {name:"Armure renforcée", def:25, cost:200},
+  {name:"Armure composite", def:45, cost:500},
+  {name:"Exosquelette léger", def:70, cost:900},
+  {name:"Armure réactive", def:100, cost:1500},
+  {name:"Exosquelette lourd", def:140, cost:2400},
+  {name:"Nanotechnologie", def:190, cost:4000},
+  {name:"Armure Titan", def:250, cost:6000}
+];
+
+const BOSSES = {
+  10:["GÉNÉRAL BRUTUS",600,30,300,400],
+  20:["COLONEL VIPÈRE",1400,45,500,700],
+  30:["COMMANDANT FALCON",2600,60,750,1000],
+  40:["TANK DU DÉSERT",4200,80,1000,1400],
+  50:["FORTERESSE VOLANTE",6500,100,1500,2000],
+  60:["CYBORG NULL",9500,120,2000,2800],
+  70:["SATELITE DE GUERRE",13500,150,2600,3800],
+  80:["GÉNÉRAL OMÉGA",18500,180,3400,5000],
+  90:["MÉGA RONGEUR",25000,220,4500,6500],
+  100:["L'EMPEREUR DE LA MÉLO",40000,280,10000,15000]
+};
+
+const ENEMY_TYPES = ["Fantassin ennemi","Tireur embusqué","Soldat d'élite","Bunker fortifié","Char de combat","Hélicoptère d'attaque"];
+
+/* ═══════════════════ ÉTAT DU JOUEUR ═══════════════════ */
+let P = null;
+let enemy = null;
+let defending = false;
+
+function defaultPlayer(name){
+  return {
+    name:name || "Commandant",
+    level:1, hp:100, maxHp:100,
+    gold:100, xp:0, xpNext:100,
+    weapon:0, armor:0, medkits:3,
+    kills:0, wins:0
+  };
 }
 
-# ---------------------------------------------------------------- armures
-ARMORS = {
-    1:  ("Gilet tactique",       10, 0),
-    10: ("Armure renforcée",     25, 200),
-    20: ("Armure composite",     45, 500),
-    35: ("Exosquelette léger",   70, 900),
-    50: ("Armure réactive",      100, 1500),
-    65: ("Exosquelette lourd",   140, 2400),
-    80: ("Nanotechnologie",      190, 4000),
-    95: ("Armure Titan",         250, 6000),
+function rankFor(lvl){
+  let r = RANKS[0][1];
+  for(const [l,n] of RANKS) if(lvl>=l) r=n;
+  return r;
+}
+function critChance(){ return Math.min(0.05 + P.level*0.002, 0.30); }
+
+/* ═══════════════════ ENNEMIS ═══════════════════ */
+function makeEnemy(){
+  const b = BOSSES[P.level];
+  if(b) return {name:b[0], hp:b[1], maxHp:b[1], dmg:b[2], xp:b[3], gold:b[4], boss:true};
+  const baseHp = 18 + P.level*6;
+  const baseDmg = 4 + P.level*2;
+  const t = ENEMY_TYPES[Math.floor(Math.random()*ENEMY_TYPES.length)];
+  let hp=baseHp, dmg=baseDmg, mult=1;
+  switch(t){
+    case "Tireur embusqué":    hp=baseHp*0.7;  dmg=baseDmg*1.4; mult=1.1; break;
+    case "Soldat d'élite":     hp=baseHp*1.2;  dmg=baseDmg*1.1; mult=1.2; break;
+    case "Bunker fortifié":    hp=baseHp*1.8;  dmg=baseDmg*0.7; mult=1.4; break;
+    case "Char de combat":     hp=baseHp*2.2;  dmg=baseDmg*1.3; mult=1.8; break;
+    case "Hélicoptère d'attaque": hp=baseHp*1.5; dmg=baseDmg*1.8; mult=2.2; break;
+  }
+  return {
+    name:t, hp:Math.round(hp), maxHp:Math.round(hp),
+    dmg:Math.round(dmg),
+    xp:Math.round(20+P.level*3*mult),
+    gold:Math.round(15+P.level*2*mult),
+    boss:false
+  };
 }
 
-# ---------------------------------------------------------------- types d'ennemis
-def enemy_pool(level):
-    """Liste (nom, hp, dmg, xp, gold) des ennemis possibles au niveau donné."""
-    base_hp = 18 + level * 6
-    base_dmg = 4 + level * 2
-    return [
-        ("Fantassin ennemi",   base_hp,           base_dmg,          20 + level*3,  15 + level*2),
-        ("Tireur embusqué",    int(base_hp*0.7),  int(base_dmg*1.4), 25 + level*3,  20 + level*2),
-        ("Soldat d'élite",     int(base_hp*1.2),  int(base_dmg*1.1), 30 + level*3,  25 + level*2),
-        ("Bunker fortifié",    int(base_hp*1.8),  int(base_dmg*0.7), 35 + level*4,  35 + level*3),
-        ("Char de combat",     int(base_hp*2.2),  int(base_dmg*1.3), 50 + level*4,  50 + level*3),
-        ("Hélicoptère d'attaque", int(base_hp*1.5), int(base_dmg*1.8), 60 + level*5, 60 + level*4),
-    ]
+/* ═══════════════════ LOG & RENDU ═══════════════════ */
+function log(msg, cls){
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls||'info'}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
 
-def boss_for(level):
-    """Boss tous les 10 niveaux."""
-    bosses = {
-        10:  ("GÉNÉRAL BRUTUS",     600,  30, 300, 400),
-        20:  ("COLONEL VIPÈRE",     1400, 45, 500, 700),
-        30:  ("COMMANDANT FALCON",  2600, 60, 750, 1000),
-        40:  ("TANK DU DÉSERT",     4200, 80, 1000, 1400),
-        50:  ("FORTERESSE VOLANTE", 6500, 100, 1500, 2000),
-        60:  ("CYBORG NULL",        9500, 120, 2000, 2800),
-        70:  ("SATELITE DE GUERRE", 13500, 150, 2600, 3800),
-        80:  ("GÉNÉRAL OMÉGA",      18500, 180, 3400, 5000),
-        90:  ("MÉGA RONGEUR",       25000, 220, 4500, 6500),
-        100: ("L'EMPEREUR DE LA MÉLO", 40000, 280, 10000, 15000),
-    }
-    return bosses.get(level)
+function renderHUD(){
+  const w = WEAPONS[P.weapon], a = ARMORS[P.armor];
+  document.getElementById('game-title').innerHTML =
+    `🪖 ${P.name} — <span class="rank">${rankFor(P.level)}</span>`;
+  document.getElementById('hud').innerHTML = `
+    <div class="stat"><div class="label">Niveau</div><div class="value">${P.level}/100</div></div>
+    <div class="stat"><div class="label">Or</div><div class="value" style="color:#ffd700">${P.gold}</div></div>
+    <div class="stat"><div class="label">Arme</div><div class="value" style="font-size:13px">${w.name} (${w.dmg})</div></div>
+    <div class="stat"><div class="label">Armure</div><div class="value" style="font-size:13px">${a.name} (${a.def})</div></div>
+    <div class="stat"><div class="label">💊 Trousse</div><div class="value">${P.medkits}</div></div>
+    <div class="stat"><div class="label">Victoires / Élims</div><div class="value" style="font-size:13px">${P.wins} / ${P.kills}</div></div>`;
+  const hpPct = Math.max(0, P.hp/P.maxHp*100);
+  const xpPct = Math.min(100, P.xp/P.xpNext*100);
+  document.getElementById('hpbar').style.width = hpPct+'%';
+  document.getElementById('hptext').textContent = `PV : ${P.hp} / ${P.maxHp}`;
+  document.getElementById('xpbar').style.width = xpPct+'%';
+}
 
-# ---------------------------------------------------------------- joueur
-class Player:
-    def __init__(self, name):
-        self.name = name
-        self.level = 1
-        self.hp = 100
-        self.max_hp = 100
-        self.gold = 100
-        self.xp = 0
-        self.xp_next = 100
-        self.weapon = 1
-        self.armor = 1
-        self.medkits = 3
-        self.kills = 0
-        self.wins = 0
+function renderBattle(){
+  const b = document.getElementById('battle');
+  const ePct = Math.max(0, enemy.hp/enemy.maxHp*100);
+  const bossHTML = enemy.boss ? `<div class="boss-banner">☠ BOSS DU NIVEAU ${P.level} ☠</div>` : '';
+  b.innerHTML = `
+    ${bossHTML}
+    <div class="enemy-line">
+      <span class="enemy-name">${enemy.boss?'👹':'👤'} ${enemy.name}</span>
+      <span>${enemy.hp} / ${enemy.maxHp} PV</span>
+    </div>
+    <div class="bar-wrap"><div class="bar enemy" style="width:${ePct}%"></div></div>
+    <div class="player-line">💂 Vous : ${P.hp} / ${P.maxHp} PV</div>
+    <div class="actions">
+      <button class="btn" onclick="doAttack()">⚔ Attaquer</button>
+      <button class="btn blue" onclick="doPrecise()">🎯 Tir précis (50 or)</button>
+      <button class="btn gold" onclick="doMedkit()">💊 Soin (${P.medkits})</button>
+      <button class="btn gray" onclick="doDefend()">🛡 Défendre</button>
+    </div>`;
+}
 
-    @property
-    def weapon_name(self): return WEAPONS[self.weapon][0]
+function renderShop(){
+  document.getElementById('shop-hud').innerHTML = `
+    <div class="stat"><div class="label">Or</div><div class="value" style="color:#ffd700">${P.gold}</div></div>
+    <div class="stat"><div class="label">Niveau</div><div class="value">${P.level}/100</div></div>`;
+  const nw = WEAPONS[P.weapon+1];
+  document.getElementById('btn-weapon').textContent = nw
+    ? `🔫 ${nw.name} (${nw.dmg} dégâts) — ${nw.cost} or`
+    : "🔫 Arme au MAXIMUM";
+  document.getElementById('btn-weapon').disabled = !nw || P.gold < nw.cost;
+  const na = ARMORS[P.armor+1];
+  document.getElementById('btn-armor').textContent = na
+    ? `🛡 ${na.name} (${na.def} défense) — ${na.cost} or`
+    : "🛡 Armure au MAXIMUM";
+  document.getElementById('btn-armor').disabled = !na || P.gold < na.cost;
+}
 
-    @property
-    def weapon_damage(self): return WEAPONS[self.weapon][1]
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(id==='game'){ renderHUD(); renderBattle(); }
+  if(id==='shop') renderShop();
+}
 
-    @property
-    def armor_name(self): return ARMORS[self.armor][0]
+/* ═══════════════════ COMBAT ═══════════════════ */
+function enemyTurn(){
+  if(enemy.hp<=0 || P.hp<=0) return;
+  let dmg = Math.max(1, enemy.dmg - ARMORS[P.armor].def);
+  if(defending) dmg = Math.max(1, Math.round(dmg*0.35));
+  P.hp -= dmg;
+  log(`☠ ${enemy.name} t'attaque : <span class="dmg">-${dmg} PV</span>`, 'dmg');
+  defending = false;
+  checkEnd();
+}
 
-    @property
-    def armor_defense(self): return ARMORS[self.armor][1]
+function checkEnd(){
+  if(P.hp <= 0){
+    P.hp = 0;
+    renderHUD(); renderBattle();
+    log(`💀 <b>${P.name} est tombé au niveau ${P.level}...</b>`, 'crit');
+    log('🪖 La MÉLO se souviendra de toi.', 'info');
+    saveGame();
+    setTimeout(()=>showScreen('menu'), 2500);
+    return true;
+  }
+  if(enemy.hp <= 0){
+    P.kills++; P.wins++;
+    P.gold += enemy.gold;
+    log(`✅ VICTOIRE ! +<span class="gold">${enemy.gold} or</span>`, 'heal');
+    addXP(enemy.xp);
+    saveGame();
+    if(P.level>=100){ victory(); return true; }
+    setTimeout(()=>{ enemy = makeEnemy(); renderBattle(); }, 900);
+    return true;
+  }
+  return false;
+}
 
-    @property
-    def crit_chance(self): return min(0.05 + self.level * 0.002, 0.30)
+function addXP(amount){
+  P.xp += amount;
+  while(P.xp >= P.xpNext){
+    P.xp -= P.xpNext;
+    P.level++;
+    P.maxHp += 15;
+    P.hp = P.maxHp;
+    P.xpNext = Math.round(P.xpNext*1.35);
+    log(`⬆ <b>NIVEAU ${P.level} !</b> +15 PV max`, 'heal');
+    if(P.level>=100){ P.level=100; break; }
+  }
+  renderHUD();
+}
 
-    def attack(self):
-        dmg = random.randint(int(self.weapon_damage * 0.75),
-                             int(self.weapon_damage * 1.25))
-        crit = random.random() < self.crit_chance
-        if crit:
-            dmg = int(dmg * 2)
-        return dmg, crit
+function victory(){
+  document.getElementById('battle').innerHTML =
+    `<h2 style="color:#ffd700">🏆🏆🏆</h2>
+     <h2 style="color:#7CFC00">FÉLICITATIONS, ${P.name} !</h2>
+     <p>Tu as conquis les <b>100 niveaux</b> de LA MÉLO.</p>
+     <p class="rank">LÉGENDE ÉTERNELLE</p>
+     <button class="btn gold" onclick="showScreen('menu')">🏆 Continuer en mode libre</button>`;
+  log('🏆 <b>100 NIVEAUX CONQUIS !</b>', 'crit');
+}
 
-    def take_damage(self, dmg):
-        reduced = max(1, dmg - self.armor_defense)
-        self.hp -= reduced
-        return reduced
+/* Actions du joueur */
+function doAttack(){
+  let dmg = Math.round(WEAPONS[P.weapon].dmg * (0.75 + Math.random()*0.5));
+  let crit = Math.random() < critChance();
+  if(crit) dmg = Math.round(dmg*2);
+  enemy.hp -= dmg;
+  log(`⚔ Tu infliges <span class="dmg">${dmg}</span> dégâts${crit?' <span class="crit">(CRITIQUE !)</span>':''}`);
+  renderBattle();
+  if(!checkEnd()) enemyTurn();
+}
 
-    def heal(self, amount=45):
-        before = self.hp
-        self.hp = min(self.max_hp, self.hp + amount)
-        return self.hp - before
+function doPrecise(){
+  if(P.gold < 50){ log('❌ Pas assez d\'or (50 requis).','crit'); return; }
+  P.gold -= 50;
+  const dmg = Math.round(WEAPONS[P.weapon].dmg * 2.2);
+  enemy.hp -= dmg;
+  log(`🎯 TIR PRÉCIS : <span class="crit">${dmg}</span> dégâts garantis !`);
+  renderHUD(); renderBattle();
+  if(!checkEnd()) enemyTurn();
+}
 
-    def add_xp(self, amount):
-        self.xp += amount
-        leveled = False
-        while self.xp >= self.xp_next:
-            self.xp -= self.xp_next
-            self.level += 1
-            self.max_hp += 15
-            self.hp = self.max_hp
-            self.xp_next = int(self.xp_next * 1.35)
-            leveled = True
-            if self.level >= 100:
-                self.level = 100
-                break
-        return leveled
+function doMedkit(){
+  if(P.medkits<=0){ log('❌ Plus de trousse de soin !','crit'); return; }
+  P.medkits--;
+  const heal = Math.min(45, P.maxHp - P.hp);
+  P.hp += heal;
+  log(`💊 +${heal} PV restaurés.`, 'heal');
+  renderHUD(); renderBattle();
+  if(!checkEnd()) enemyTurn();
+}
 
-    def status(self):
-        print(f"\n{C.Cc}══════════════════════════════════════════════{C.RESET}")
-        print(f"{C.BOLD}{C.W}   {self.name}{C.RESET} — {C.M}Grade : {rank_for(self.level)}{C.RESET}")
-        print(f"{C.B}   Niveau {self.level}/100   XP {self.xp}/{self.xp_next}{C.RESET}")
-        bar = "█" * (self.hp * 20 // self.max_hp)
-        print(f"{C.G}   PV {self.hp}/{self.max_hp}  [{bar:<20}]{C.RESET}")
-        print(f"{C.Y}   Arme : {self.weapon_name} ({self.weapon_damage} dégâts)"
-              f"   Armure : {self.armor_name} ({self.armor_defense} défense){C.RESET}")
-        print(f"{C.Y}   Or : {self.gold}   Trousse de soin : {self.medkits}"
-              f"   Victoires : {self.wins}   Éliminations : {self.kills}{C.RESET}")
-        print(f"{C.Cc}══════════════════════════════════════════════{C.RESET}")
+function doDefend(){
+  defending = true;
+  log('🛡 Position défensive : dégâts subis réduits à 35%.','info');
+  enemyTurn();
+}
 
-# ---------------------------------------------------------------- combat
-def battle(player, enemy_name, enemy_hp, enemy_dmg, xp_reward, gold_reward, is_boss=False):
-    print(f"\n{C.R}⚔  COMBAT : {enemy_name} ⚔{C.RESET}")
-    if is_boss:
-        slow(c(f"☠  {C.BOLD}ATTENTION : BOSS DU NIVEAU {player.level} ! ☠{C.RESET}", C.R), 0.05)
-    turn = 0
-    while enemy_hp > 0 and player.hp > 0:
-        turn += 1
-        ebar = "█" * (enemy_hp * 20 // max(enemy_hp, 1))
-        pbar = "█" * (player.hp * 20 // player.max_hp)
-        print(f"\n{C.D}── Tour {turn} ─────────────────────────────{C.RESET}")
-        print(f"{C.R}Ennemi [{enemy_name}] : {enemy_hp} PV [{ebar:<20}]{C.RESET}")
-        print(f"{C.G}Vous : {player.hp} PV [{pbar:<20}]{C.RESET}")
-        print(f"{C.B}1. Attaquer   2. Tir précis (50 or)   3. Trousse de soin"
-              f" ({player.medkits})   4. Défendre   5. Fuir{C.RESET}")
-        choice = input("➤ Votre action : ").strip()
+/* ═══════════════════ ARMURERIE ═══════════════════ */
+function buyWeapon(){
+  const nw = WEAPONS[P.weapon+1];
+  if(!nw){ log('Arme déjà max.','crit'); return; }
+  if(P.gold < nw.cost){ log('Pas assez d\'or.','crit'); return; }
+  P.gold -= nw.cost; P.weapon++;
+  log(`🔫 Nouvelle arme : <b>${nw.name}</b> !`,'gold');
+  renderShop();
+}
+function buyArmor(){
+  const na = ARMORS[P.armor+1];
+  if(!na){ log('Armure déjà max.','crit'); return; }
+  if(P.gold < na.cost){ log('Pas assez d\'or.','crit'); return; }
+  P.gold -= na.cost; P.armor++;
+  log(`🛡 Nouvelle armure : <b>${na.name}</b> !`,'gold');
+  renderShop();
+}
+function buyMedkit(){
+  if(P.gold<75){ log('Pas assez d\'or.','crit'); return; }
+  P.gold-=75; P.medkits++;
+  log('💊 +1 trousse de soin.','heal');
+  renderShop();
+}
 
-        if choice == "1":
-            dmg, crit = player.attack()
-            enemy_hp -= dmg
-            print(c(f"  💥 Vous infligez {dmg} dégâts" + (" (CRITIQUE !)" if crit else ""),
-                    C.G if crit else C.W))
-            if enemy_hp > 0:
-                d = player.take_damage(enemy_dmg)
-                print(c(f"  ☠ L'ennemi riposte : {d} dégâts subis", C.R))
+/* ═══════════════════ SAUVEGARDE ═══════════════════ */
+function saveGame(){
+  try{ localStorage.setItem('lamelo_save', JSON.stringify(P)); }catch(e){}
+}
+function loadGame(){
+  try{
+    const d = JSON.parse(localStorage.getItem('lamelo_save'));
+    if(!d){ alert('Aucune sauvegarde trouvée. Nouvelle partie !'); return; }
+    P = d;
+    enemy = makeEnemy();
+    log(`📂 Bienvenue de retour, <b>${P.name}</b> !`, 'info');
+    showScreen('game');
+  }catch(e){ alert('Sauvegarde illisible.'); }
+}
 
-        elif choice == "2":
-            if player.gold >= 50:
-                player.gold -= 50
-                dmg = int(player.weapon_damage * 2.2)
-                enemy_hp -= dmg
-                print(c(f"  🎯 TIR PRÉCIS ! {dmg} dégâts garantis.", C.Cc))
-                if enemy_hp > 0:
-                    d = player.take_damage(enemy_dmg)
-                    print(c(f"  ☠ L'ennemi riposte : {d} dégâts subis", C.R))
-            else:
-                print(c("  Pas assez d'or (50 requis).", C.R))
-                continue
-
-        elif choice == "3":
-            if player.medkits > 0:
-                player.medkits -= 1
-                healed = player.heal()
-                print(c(f"  💊 +{healed} PV restaurés.", C.G))
-            else:
-                print(c("  Plus de trousse de soin !", C.R))
-                continue
-
-        elif choice == "4":
-            d = player.take_damage(int(enemy_dmg * 0.35))
-            print(c(f"  🛡 Position défensive : seulement {d} dégâts subis.", C.B))
-
-        elif choice == "5":
-            if random.random() < 0.5:
-                print(c("  🏃 Vous parvenez à fuir (retour au camp).", C.Y))
-                return "fled"
-            print(c("  🚫 Fuite ratée ! L'ennemi vous attrape.", C.R))
-            d = player.take_damage(enemy_dmg)
-            print(c(f"  ☠ {d} dégâts subis.", C.R))
-        else:
-            print(c("  Commande invalide.", C.R))
-
-    if player.hp <= 0:
-        return "dead"
-    player.kills += 1
-    player.wins += 1
-    player.gold += gold_reward
-    leveled = player.add_xp(xp_reward)
-    print(c(f"\n✅ VICTOIRE ! +{xp_reward} XP, +{gold_reward} or.", C.G))
-    if leveled:
-        print(c(f"⬆  NIVEAU SUPÉRIEUR ! Vous êtes maintenant niveau {player.level} !", C.M))
-        if player.level % 10 == 0:
-            print(c(f"⭐ NOUVEAU GRADE : {rank_for(player.level)} ⭐", C.M))
-    return "win"
-
-# ---------------------------------------------------------------- boutique
-def shop(player):
-    while True:
-        player.status()
-        print(f"\n{C.Cc}═══ ARMURERIE DE LA MÉLO ═══{C.RESET}")
-        print(f"{C.B}1. Améliorer l'arme (prochaine : {WEAPONS.get(player.weapon+1, ('MAX',0,0))[0]}){C.RESET}")
-        print(f"{C.B}2. Améliorer l'armure (prochaine : {ARMORS.get(player.armor+1, ('MAX',0,0))[0]}){C.RESET}")
-        print(f"{C.G}3. Acheter une trousse de soin (75 or){C.RESET}")
-        print(f"{C.R}4. Quitter l'armurerie{C.RESET}")
-        choice = input("➤ Choix : ").strip()
-
-        if choice == "1":
-            nxt = WEAPONS.get(player.weapon + 1)
-            if not nxt:
-                print(c("  Arme déjà au maximum !", C.R))
-            elif player.gold >= nxt[2]:
-                player.gold -= nxt[2]
-                player.weapon += 1
-                print(c(f"  🔫 Nouvelle arme : {nxt[0]} !", C.G))
-            else:
-                print(c(f"  Pas assez d'or ({nxt[2]} requis).", C.R))
-
-        elif choice == "2":
-            nxt = ARMORS.get(player.armor + 1)
-            if not nxt:
-                print(c("  Armure déjà au maximum !", C.R))
-            elif player.gold >= nxt[2]:
-                player.gold -= nxt[2]
-                player.armor += 1
-                print(c(f"  🛡 Nouvelle armure : {nxt[0]} !", C.G))
-            else:
-                print(c(f"  Pas assez d'or ({nxt[2]} requis).", C.R))
-
-        elif choice == "3":
-            if player.gold >= 75:
-                player.gold -= 75
-                player.medkits += 1
-                print(c("  💊 +1 trousse de soin.", C.G))
-            else:
-                print(c("  Pas assez d'or.", C.R))
-
-        elif choice == "4":
-            return
-        else:
-            print(c("  Commande invalide.", C.R))
-
-# ---------------------------------------------------------------- événements aléatoires
-def random_event(player):
-    events = [
-        ("🪂 Un ravitaillement allié tombe du ciel !", lambda: setattr(player, 'medkits', player.medkits + 1)),
-        ("📡 Vous interceptez des plans ennemis : +150 or.", lambda: setattr(player, 'gold', player.gold + 150)),
-        ("🏥 Les médecins militaires vous soignent totalement.", lambda: setattr(player, 'hp', player.max_hp)),
-        ("🔧 L'ingénieur améliore votre armure : +30 défense temporaire (permanent).",
-         lambda: setattr(player, 'armor', player.armor) or player.__setattr__('_bonus_def', getattr(player, '_bonus_def', 0) + 30)),
-        ("🎖 Une mission bonus réussie : +200 XP.", lambda: player.add_xp(200)),
-    ]
-    text, effect = random.choice(events)
-    print(c(f"\n✨ ÉVÉNEMENT : {text}", C.M))
-    effect()
-    time.sleep(1)
-
-# ---------------------------------------------------------------- sauvegarde
-def save(player, filename="la_melo_save.json"):
-    data = {k: v for k, v in vars(player).items() if not k.startswith("_")}
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(c(f"\n💾 Partie sauvegardée dans {filename}", C.B))
-
-def load(filename="la_melo_save.json"):
-    if not os.path.exists(filename):
-        return None
-    with open(filename, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    p = Player(data["name"])
-    p.__dict__.update(data)
-    print(c(f"\n📂 Partie chargée — bienvenue de retour, {p.name} !", C.G))
-    return p
-
-# ---------------------------------------------------------------- menu principal
-def main():
-    print(c(f"""
-{C.BOLD}{C.Cc}
-╔══════════════════════════════════════════════════╗
-║                                                  ║
-║        ██╗      █████╗    ███╗   ███╗███████╗    ║
-║        ██║     ██╔══██╗   ████╗ ████║██╔════╝    ║
-║        ██║     ███████║   ██╔████╔██║█████╗      ║
-║        ██║     ██╔══██║   ██║╚██╔╝██║██╔══╝      ║
-║        ███████╗██║  ██║   ██║ ╚═╝ ██║███████╗    ║
-║        ╚══════╝╚═╝  ╚═╝   ╚═╝     ╚═╝╚══════╝    ║
-║                                                  ║
-║        SIMULATEUR DE GUERRE — 100 NIVEAUX        ║
-╚══════════════════════════════════════════════════╝{C.RESET}
-""")
-    print(f"{C.Y}1. Nouvelle partie")
-    print(f"2. Charger la sauvegarde")
-    print(f"3. Quitter{C.RESET}")
-    choice = input("➤ Choix : ").strip()
-
-    player = None
-    if choice == "2":
-        player = load()
-        if not player:
-            print(c("  Aucune sauvegarde trouvée. Nouvelle partie !", C.R))
-    if choice == "3":
-        sys.exit(0)
-    if player is None:
-        name = input("➤ Nom de votre commandant : ").strip() or "Commandant"
-        player = Player(name)
-
-    # ---------------------------------------------------------- boucle de jeu
-    while player.level <= 100 and player.hp > 0:
-        player.status()
-        print(f"\n{C.B}── ZONE DE COMBAT — Niveau {player.level} ──{C.RESET}")
-        print(f"{C.Y}1. Partir au combat   2. Armurerie   3. Sauvegarder   4. Quitter{C.RESET}")
-        choice = input("➤ Choix : ").strip()
-
-        if choice == "1":
-            if random.random() < 0.15:
-                random_event(player)
-            boss = boss_for(player.level)
-            if boss:
-                result = battle(player, boss[0], boss[1], boss[2], boss[3], boss[4], is_boss=True)
-            else:
-                pool = enemy_pool(player.level)
-                e = random.choice(pool)
-                result = battle(player, e[0], e[1], e[2], e[3], e[4])
-            if result == "dead":
-                print(c(f"\n💀 {player.name} est tombé au combat au niveau {player.level}...", C.R))
-                print(c("La MÉLO se souviendra de vous. 🪖", C.D))
-                save(player)
-                break
-            if result == "fled":
-                continue
-            if player.level >= 100 and player.wins >= 1:
-                print(c(f"\n🏆🏆🏆 {C.BOLD}FÉLICITATIONS, {player.name} !{C.RESET} {C.M}"
-                        f"Vous avez conquis les 100 niveaux de LA MÉLO ! LÉGENDE ÉTERNELLE !{C.RESET} 🏆🏆🏆", C.Y))
-                break
-
-        elif choice == "2":
-            shop(player)
-
-        elif choice == "3":
-            save(player)
-
-        elif choice == "4":
-            save(player)
-            print(c("Fin de la mission. À bientôt, soldat.", C.D))
-            break
-        else:
-            print(c("  Commande invalide.", C.R))
-
-    print(c("\nMerci d'avoir joué à LA MELO.", C.D))
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print(c("\n\nInterruption. Au revoir, soldat. 🪖", C.Y))
-</｜｜DSML｜｜parameter>
-</｜｜DSML｜｜invoke>
-</｜｜DSML｜｜tool_calls>
+/* ═══════════════════ NOUVELLE PARTIE ═══════════════════ */
+function newGame(){
+  const name = prompt("Nom de ton commandant :", "Commandant") || "Commandant";
+  P = defaultPlayer(name);
+  enemy = makeEnemy();
+  document.getElementById('log').innerHTML = '';
+  log(`🪖 Bienvenue, <b>${name}</b>. La guerre commence. Niveau 1.`,'info');
+  showScreen('game');
+}
+</script>
+</body>
+</html>
