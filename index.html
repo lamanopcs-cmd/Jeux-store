@@ -5,76 +5,97 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Laçeuille - Bienvenue chez Lamelo</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial'}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins', Arial}
 body {
   background: linear-gradient(135deg,#FF8C00,#00c853);
   min-height:100vh; display:flex; align-items:center; justify-content:center;
-  color:#fff;
+  color:#fff; overflow:hidden;
 }
 .game-box {
-  background:#fff; color:#333; width:95%; max-width:600px; padding:25px;
-  border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.3); text-align:center;
+  background:#fff; color:#333; width:95%; max-width:650px; padding:25px;
+  border-radius:20px; box-shadow:0 15px 50px rgba(0,0,0,0.4); text-align:center;
+  animation: fadeIn 0.5s;
 }
-.logo { font-size:28px; font-weight:bold; color:#00c853; margin-bottom:10px; }
+@keyframes fadeIn { from{opacity:0; transform:scale(0.9)} to{opacity:1; transform:scale(1)} }
+.logo { font-size:32px; font-weight:900; color:#00c853; margin-bottom:10px; text-shadow:2px 2px #FF8C00; }
 .logo span { color:#FF8C00; }
 .header { display:flex; justify-content:space-between; margin-bottom:15px; font-weight:bold; }
-.header div { background:#f5f5f5; padding:8px 15px; border-radius:10px; }
+.header div { background:#f5f5f5; padding:10px 15px; border-radius:12px; font-size:14px; }
 .level { color:#00c853; }
 .score { color:#FF8C00; }
+.coins { color:#FFD700; }
+.progress-bar { width:100%; height:8px; background:#ddd; border-radius:10px; margin-bottom:15px; overflow:hidden; }
+.progress { height:100%; background:linear-gradient(90deg,#FF8C00,#00c853); width:0%; transition:0.5s; }
 .question-img {
-  width:100%; height:250px; object-fit:cover; border-radius:15px; margin:15px 0;
-  border:4px solid #00c853;
+  width:100%; height:280px; object-fit:cover; border-radius:15px; margin:15px 0;
+  border:4px solid #00c853; box-shadow:0 5px 15px rgba(0,0,0,0.2);
 }
-.question-text { font-size:18px; font-weight:bold; margin-bottom:20px; color:#222; }
+.question-text { font-size:20px; font-weight:bold; margin-bottom:20px; color:#222; }
 .answers { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .btn-answer {
-  background:#e8f5e9; border:2px solid #00c853; padding:15px; border-radius:12px;
+  background:#e8f5e9; border:3px solid #00c853; padding:15px; border-radius:12px;
   font-size:16px; font-weight:bold; cursor:pointer; transition:0.2s;
 }
-.btn-answer:hover { background:#00c853; color:#fff; transform:scale(1.05); }
-.btn-answer.correct { background:#00c853!important; color:#fff; }
-.btn-answer.wrong { background:#ff5252!important; color:#fff; }
+.btn-answer:hover { background:#00c853; color:#fff; transform:translateY(-3px); }
+.btn-answer:disabled { cursor:not-allowed; }
+.btn-answer.correct { background:#00c853!important; color:#fff; animation: pulse 0.5s; }
+.btn-answer.wrong { background:#ff5252!important; color:#fff; animation: shake 0.5s; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
 #nextBtn {
-  background:#FF8C00; color:#fff; border:none; padding:12px 30px; border-radius:10px;
-  font-size:16px; font-weight:bold; margin-top:20px; cursor:pointer; display:none;
+  background:linear-gradient(90deg,#FF8C00,#FF4500); color:#fff; border:none; padding:14px 35px; border-radius:12px;
+  font-size:18px; font-weight:bold; margin-top:20px; cursor:pointer; display:none;
 }
 .dice {
-  font-size:40px; margin:10px 0;
+  font-size:45px; margin:10px 0;
 }
 #startScreen, #endScreen {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; flex-direction:column;
+  background:linear-gradient(135deg,#FF8C00,#00c853); display:flex; align-items:center; justify-content:center; flex-direction:column;
   z-index:999;
 }
 .start-btn {
-  background:#00c853; color:#fff; border:none; padding:15px 40px; border-radius:12px;
-  font-size:20px; font-weight:bold; cursor:pointer; margin-top:20px;
+  background:#fff; color:#00c853; border:none; padding:18px 45px; border-radius:15px;
+  font-size:22px; font-weight:900; cursor:pointer; margin-top:20px; box-shadow:0 5px 20px rgba(0,0,0,0.3);
+}
+.popup {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-size:50px; font-weight:900; z-index:1000; display:none;
 }
 </style>
 </head>
 <body>
 
+<audio id="soundCorrect" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
+<audio id="soundWrong" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+<audio id="soundCoin" src="https://www.soundjay.com/misc/sounds/coin-drop-2.mp3"></audio>
+
 <!-- ECRAN DE DEPART -->
 <div id="startScreen">
-  <h1 style="font-size:40px">🎲 La Laçeuille 🎲</h1>
+  <h1 style="font-size:45px">🎲 Laçeuille 🎲</h1>
   <h2>Bienvenue chez Lamelo</h2>
-  <p>Devine la Côte d'Ivoire en images</p>
+  <p>1500 Niveaux | Devine la Côte d'Ivoire 🇨🇮</p>
   <button class="start-btn" onclick="startGame()">COMMENCER</button>
 </div>
 
 <!-- ECRAN DE FIN -->
 <div id="endScreen" style="display:none">
-  <h1>🎉 Bravo! 🎉</h1>
+  <h1>🏆 FIN DU JEU 🏆</h1>
   <h2 id="finalScore"></h2>
+  <h3 id="finalCoins"></h3>
   <button class="start-btn" onclick="location.reload()">REJOUER</button>
 </div>
+
+<div class="popup" id="popup"></div>
 
 <!-- JEU -->
 <div class="game-box" id="gameBox" style="display:none">
   <div class="logo">La <span>Laçeuille</span></div>
+  <div class="progress-bar"><div class="progress" id="progress"></div></div>
   <div class="header">
-    <div class="level">Niveau: <span id="level">1</span>/10</div>
+    <div class="level">Niv: <span id="level">1</span>/1500</div>
     <div class="score">Score: <span id="score">0</span></div>
+    <div class="coins">🪙 <span id="coins">0</span></div>
   </div>
 
   <div class="dice" id="dice">🎲</div>
@@ -84,55 +105,38 @@ body {
 
   <div class="answers" id="answers"></div>
 
-  <button id="nextBtn" onclick="nextQuestion()">QUESTION SUIVANTE →</button>
+  <button id="nextBtn" onclick="nextQuestion()">SUIVANT →</button>
 </div>
 
 <script>
 const questions = [
-  { img:"https://upload.wikimedia.org/wikipedia/commons/7/7d/Basilique_Notre-Dame_de_la_Paix_de_Yamoussoukro.jpg",
-    q:"Quelle est cette grande basilique en Côte d'Ivoire?",
-    answers:["Cathédrale du Plateau","Basilique de Yamoussoukro","Église de Bingerville","Mosquée de la Riviera"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/f/f9/Abidjan_Cocody.jpg",
-    q:"De quelle ville ivoirienne s'agit-il?",
-    answers:["Bouaké","San Pedro","Abidjan","Korhogo"], correct:2 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/3/3a/Attieke_avec_poisson.jpg",
-    q:"Comment s'appelle ce plat ivoirien très populaire?",
-    answers:["Le Riz Gras","L'Attiéké avec Poisson","Le Foutou","L'Alloco"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/9/9f/Parc_national_de_Ta%C3%AF.jpg",
-    q:"Quel est ce parc national ivoirien classé à l'UNESCO?",
-    answers:["Parc du Banco","Parc de Taï","Parc de Comoé","Parc de Marahoué"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/4/4e/Pagne_Baoule.jpg",
-    q:"Ce pagne traditionnel vient de quel peuple?",
-    answers:["Les Bétés","Les Baoulés","Les Sénoufos","Les Didas"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/8/8a/Stade_Felix_Houphouet_Boigny.jpg",
-    q:"Quel est le nom de ce grand stade à Abidjan?",
-    answers:["Stade Champroux","Stade FHB","Stade d'Ebimpé","Stade de Treichville"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/1/1e/Cacao_Cote_Ivoire.jpg",
-    q:"La Côte d'Ivoire est 1er producteur mondial de quoi?",
-    answers:["Café","Cacao","Ananas","Coton"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/6/6c/Masque_Senoufo.jpg",
-    q:"Ce masque traditionnel appartient à quelle culture?",
-    answers:["Culture Baoulé","Culture Sénoufo","Culture Wê","Culture Guéré"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/5/5a/Pont_HKB_Abidjan.jpg",
-    q:"Comment s'appelle ce pont à Abidjan?",
-    answers:["Pont De Gaulle","Pont HKB","Pont Félix","Pont Riviera"], correct:1 },
-
-  { img:"https://upload.wikimedia.org/wikipedia/commons/d/d8/Drapeau_Cote_Ivoire.svg",
-    q:"Quelles sont les couleurs du drapeau de la Côte d'Ivoire?",
-    answers:["Vert-Blanc-Rouge","Orange-Blanc-Vert","Jaune-Rouge-Vert","Bleu-Blanc-Rouge"], correct:1 }
+  { img:"https://images.unsplash.com/photo-1593696140826-c58b021acf8b?q=80&w=1200", q:"Quelle est cette basilique géante?", answers:["Cathédrale Abidjan","Basilique Yamoussoukro","Église Bassam","Mosquée Plateau"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1200", q:"De quelle ville s'agit-il?", answers:["Bouaké","Abidjan","San Pedro","Korhogo"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1200", q:"Ce plat ivoirien s'appelle?", answers:["Foutou","Attiéké Poisson","Riz Gras","Garba"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1544985363-7c522a9581ec?q=80&w=1200", q:"Ce parc national est?", answers:["Parc Banco","Parc de Taï","Parc Comoé","Parc Marahoué"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200", q:"Ce pagne vient des?", answers:["Bétés","Baoulés","Sénoufos","Didas"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=1200", q:"Ce stade s'appelle?", answers:["Stade FHB","Stade Ebimpé","Stade Champroux","Stade Treichville"], correct:0 },
+  { img:"https://images.unsplash.com/photo-1574323347407-f5e1ad6d0206?q=80&w=1200", q:"1er producteur mondial de?", answers:["Café","Cacao","Ananas","Hévéa"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=1200", q:"Ce masque est?", answers:["Baoulé","Sénoufo","Wê","Guéré"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=1200", q:"Ce pont d'Abidjan est?", answers:["Pont De Gaulle","Pont HKB","Pont Riviera","Pont Houphouët"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1521292270410-a8c4d7161ef5?q=80&w=1200", q:"Couleurs du drapeau?", answers:["RVB","OVB","JRV","BBR"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=1200", q:"Capitale politique?", answers:["Abidjan","Yamoussoukro","Bouaké","Daloa"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200", q:"Boisson locale fermentée?", answers:["Bangui","Koutoukou","Bissap","Gnamakoudji"], correct:0 },
+  { img:"https://images.unsplash.com/photo-1581436661095-4f28e82d4a39?q=80&w=1200", q:"Montagne la plus haute?", answers:["Mont Nimba","Mont Tonkpi","Mont Korhogo","Mont Man"], correct:0 },
+  { img:"https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1200", q:"Ville du chocolat?", answers:["San Pedro","Soubré","Divo","Anyama"], correct:0 },
+  { img:"https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?q=80&w=1200", q:"Danse traditionnelle?", answers:["Zouglou","Zoblazo","Gbofe","Coupé-Décalé"], correct:2 },
+  { img:"https://images.unsplash.com/photo-1559563458-527698bf5295?q=80&w=1200", q:"Fruit emblématique?", answers:["Mangue","Ananas","Banane","Corossol"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1200", q:"Lagune d'Abidjan?", answers:["Lagune Ebrié","Lagune Aby","Lagune Tagba","Lagune Kossou"], correct:0 },
+  { img:"https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=1200", q:"Animal du parc Comoé?", answers:["Éléphant","Lion","Girafe","Zèbre"], correct:1 },
+  { img:"https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1200", q:"Université principale?", answers:["UFHB","UAO","UVCI","UFR"], correct:0 },
+  { img:"https://images.unsplash.com/photo-1587330287909-ae17e7d3b5a4?q=80&w=1200", q:"Devise du pays?", answers:["Union-Travail","Union-Discipline","Travail-Fraternité","Union-Discipline-Travail"], correct:3 }
 ];
 
 let currentQ = 0;
 let score = 0;
+let coins = 0;
 let level = 1;
+const totalLevels = 1500;
 
 function startGame(){
   document.getElementById('startScreen').style.display = 'none';
@@ -147,16 +151,25 @@ function lancerDe(){
   const interval = setInterval(()=>{
     dice.innerText = faces[Math.floor(Math.random()*6)];
     i++;
-    if(i>10){ clearInterval(interval); }
-  }, 100);
+    if(i>12){ clearInterval(interval); }
+  }, 80);
+}
+
+function showPopup(text, color){
+  const pop = document.getElementById('popup');
+  pop.innerText = text;
+  pop.style.color = color;
+  pop.style.display = 'block';
+  setTimeout(()=> pop.style.display='none', 1200);
 }
 
 function loadQuestion(){
   lancerDe();
-  const q = questions[currentQ];
+  const q = questions[currentQ % questions.length]; // Boucle sur les 20 questions
   document.getElementById('questionImg').src = q.img;
-  document.getElementById('questionText').innerText = q.q;
+  document.getElementById('questionText').innerText = `Niveau ${level}: ${q.q}`;
   document.getElementById('level').innerText = level;
+  document.getElementById('progress').style.width = (level/totalLevels*100) + '%';
 
   const answersDiv = document.getElementById('answers');
   answersDiv.innerHTML = '';
@@ -171,30 +184,40 @@ function loadQuestion(){
 }
 
 function checkAnswer(selected, btn){
-  const q = questions[currentQ];
+  const q = questions[currentQ % questions.length];
   const allBtns = document.querySelectorAll('.btn-answer');
   allBtns.forEach(b => b.disabled = true);
 
   if(selected === q.correct){
     btn.classList.add('correct');
-    score += 100 * level; // Plus de points au niveau élevé
+    document.getElementById('soundCorrect').play();
+    let points = 100 * level;
+    let coinGain = 10 * level;
+    score += points;
+    coins += coinGain;
     document.getElementById('score').innerText = score;
+    document.getElementById('coins').innerText = coins;
+    document.getElementById('soundCoin').play();
+    showPopup(`+${points} PTS +${coinGain} 🪙`, '#00c853');
   } else {
     btn.classList.add('wrong');
+    document.getElementById('soundWrong').play();
     allBtns[q.correct].classList.add('correct');
+    showPopup(`PERDU!`, '#ff5252');
   }
   document.getElementById('nextBtn').style.display = 'inline-block';
 }
 
 function nextQuestion(){
   currentQ++;
-  if(currentQ >= questions.length){
+  level++;
+  if(level > totalLevels){
     document.getElementById('gameBox').style.display = 'none';
     document.getElementById('endScreen').style.display = 'flex';
-    document.getElementById('finalScore').innerText = "Ton score final: " + score + " points";
+    document.getElementById('finalScore').innerText = "Score Final: " + score + " PTS";
+    document.getElementById('finalCoins').innerText = "Pièces: 🪙 " + coins;
     return;
   }
-  level = Math.floor(currentQ/2) + 1; // Monte de niveau chaque 2 questions
   loadQuestion();
 }
 </script>
