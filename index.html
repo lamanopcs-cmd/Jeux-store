@@ -3,169 +3,199 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MaxiRacer - Jeu de Course Pro</title>
+<title>La Laçeuille - Bienvenue chez Lamelo</title>
 <style>
-  body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial'; }
-  canvas { display: block; }
-  #ui {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    color: white; pointer-events: none;
-  }
-  #speed { position: absolute; bottom: 20px; right: 20px; font-size: 32px; font-weight: bold; color: #00e676; }
-  #level { position: absolute; top: 20px; left: 20px; font-size: 24px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
-  #controls { position: absolute; bottom: 20px; left: 20px; font-size: 14px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; }
-  #startScreen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(135deg,#00c853,#00e676); display: flex;
-    flex-direction: column; align-items: center; justify-content: center;
-  }
-  #startScreen h1 { font-size: 60px; margin: 0; }
-  #startBtn { margin-top: 20px; padding: 15px 40px; font-size: 20px; background: #fff; color: #00c853; border: none; border-radius: 10px; cursor: pointer; pointer-events: all; font-weight: bold; }
-</style>
-<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-  }
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial'}
+body {
+  background: linear-gradient(135deg,#FF8C00,#00c853);
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  color:#fff;
 }
-</script>
+.game-box {
+  background:#fff; color:#333; width:95%; max-width:600px; padding:25px;
+  border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.3); text-align:center;
+}
+.logo { font-size:28px; font-weight:bold; color:#00c853; margin-bottom:10px; }
+.logo span { color:#FF8C00; }
+.header { display:flex; justify-content:space-between; margin-bottom:15px; font-weight:bold; }
+.header div { background:#f5f5f5; padding:8px 15px; border-radius:10px; }
+.level { color:#00c853; }
+.score { color:#FF8C00; }
+.question-img {
+  width:100%; height:250px; object-fit:cover; border-radius:15px; margin:15px 0;
+  border:4px solid #00c853;
+}
+.question-text { font-size:18px; font-weight:bold; margin-bottom:20px; color:#222; }
+.answers { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.btn-answer {
+  background:#e8f5e9; border:2px solid #00c853; padding:15px; border-radius:12px;
+  font-size:16px; font-weight:bold; cursor:pointer; transition:0.2s;
+}
+.btn-answer:hover { background:#00c853; color:#fff; transform:scale(1.05); }
+.btn-answer.correct { background:#00c853!important; color:#fff; }
+.btn-answer.wrong { background:#ff5252!important; color:#fff; }
+#nextBtn {
+  background:#FF8C00; color:#fff; border:none; padding:12px 30px; border-radius:10px;
+  font-size:16px; font-weight:bold; margin-top:20px; cursor:pointer; display:none;
+}
+.dice {
+  font-size:40px; margin:10px 0;
+}
+#startScreen, #endScreen {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; flex-direction:column;
+  z-index:999;
+}
+.start-btn {
+  background:#00c853; color:#fff; border:none; padding:15px 40px; border-radius:12px;
+  font-size:20px; font-weight:bold; cursor:pointer; margin-top:20px;
+}
+</style>
 </head>
 <body>
 
+<!-- ECRAN DE DEPART -->
 <div id="startScreen">
-  <h1>MAXI RACER</h1>
-  <p>Niveau: 1 - Ville de Nuit</p>
-  <button id="startBtn">COMMENCER LA COURSE</button>
+  <h1 style="font-size:40px">🎲 La Laçeuille 🎲</h1>
+  <h2>Bienvenue chez Lamelo</h2>
+  <p>Devine la Côte d'Ivoire en images</p>
+  <button class="start-btn" onclick="startGame()">COMMENCER</button>
 </div>
 
-<div id="ui" style="display:none">
-  <div id="level">Niveau 1 / 5</div>
-  <div id="speed">0 KM/H</div>
-  <div id="controls">↑ Avancer | ↓ Freiner | ← → Diriger</div>
+<!-- ECRAN DE FIN -->
+<div id="endScreen" style="display:none">
+  <h1>🎉 Bravo! 🎉</h1>
+  <h2 id="finalScore"></h2>
+  <button class="start-btn" onclick="location.reload()">REJOUER</button>
 </div>
 
-<script type="module">
-import * as THREE from 'three';
+<!-- JEU -->
+<div class="game-box" id="gameBox" style="display:none">
+  <div class="logo">La <span>Laçeuille</span></div>
+  <div class="header">
+    <div class="level">Niveau: <span id="level">1</span>/10</div>
+    <div class="score">Score: <span id="score">0</span></div>
+  </div>
 
-// VARIABLES GLOBALES
-let scene, camera, renderer, car, road;
-let speed = 0, maxSpeed = 200, steer = 0;
-let keys = {};
+  <div class="dice" id="dice">🎲</div>
+
+  <img id="questionImg" class="question-img" src="" alt="Devinette">
+  <div class="question-text" id="questionText"></div>
+
+  <div class="answers" id="answers"></div>
+
+  <button id="nextBtn" onclick="nextQuestion()">QUESTION SUIVANTE →</button>
+</div>
+
+<script>
+const questions = [
+  { img:"https://upload.wikimedia.org/wikipedia/commons/7/7d/Basilique_Notre-Dame_de_la_Paix_de_Yamoussoukro.jpg",
+    q:"Quelle est cette grande basilique en Côte d'Ivoire?",
+    answers:["Cathédrale du Plateau","Basilique de Yamoussoukro","Église de Bingerville","Mosquée de la Riviera"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/f/f9/Abidjan_Cocody.jpg",
+    q:"De quelle ville ivoirienne s'agit-il?",
+    answers:["Bouaké","San Pedro","Abidjan","Korhogo"], correct:2 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/3/3a/Attieke_avec_poisson.jpg",
+    q:"Comment s'appelle ce plat ivoirien très populaire?",
+    answers:["Le Riz Gras","L'Attiéké avec Poisson","Le Foutou","L'Alloco"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/9/9f/Parc_national_de_Ta%C3%AF.jpg",
+    q:"Quel est ce parc national ivoirien classé à l'UNESCO?",
+    answers:["Parc du Banco","Parc de Taï","Parc de Comoé","Parc de Marahoué"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/4/4e/Pagne_Baoule.jpg",
+    q:"Ce pagne traditionnel vient de quel peuple?",
+    answers:["Les Bétés","Les Baoulés","Les Sénoufos","Les Didas"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/8/8a/Stade_Felix_Houphouet_Boigny.jpg",
+    q:"Quel est le nom de ce grand stade à Abidjan?",
+    answers:["Stade Champroux","Stade FHB","Stade d'Ebimpé","Stade de Treichville"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/1/1e/Cacao_Cote_Ivoire.jpg",
+    q:"La Côte d'Ivoire est 1er producteur mondial de quoi?",
+    answers:["Café","Cacao","Ananas","Coton"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/6/6c/Masque_Senoufo.jpg",
+    q:"Ce masque traditionnel appartient à quelle culture?",
+    answers:["Culture Baoulé","Culture Sénoufo","Culture Wê","Culture Guéré"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/5/5a/Pont_HKB_Abidjan.jpg",
+    q:"Comment s'appelle ce pont à Abidjan?",
+    answers:["Pont De Gaulle","Pont HKB","Pont Félix","Pont Riviera"], correct:1 },
+
+  { img:"https://upload.wikimedia.org/wikipedia/commons/d/d8/Drapeau_Cote_Ivoire.svg",
+    q:"Quelles sont les couleurs du drapeau de la Côte d'Ivoire?",
+    answers:["Vert-Blanc-Rouge","Orange-Blanc-Vert","Jaune-Rouge-Vert","Bleu-Blanc-Rouge"], correct:1 }
+];
+
+let currentQ = 0;
+let score = 0;
 let level = 1;
-let gameStarted = false;
-let clock = new THREE.Clock();
 
-// DÉMARRER LE JEU
-document.getElementById('startBtn').onclick = () => {
+function startGame(){
   document.getElementById('startScreen').style.display = 'none';
-  document.getElementById('ui').style.display = 'block';
-  gameStarted = true;
-  init();
-  animate();
+  document.getElementById('gameBox').style.display = 'block';
+  loadQuestion();
 }
 
-// INITIALISATION 3D
-function init() {
-  scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x000000, 50, 500);
+function lancerDe(){
+  const dice = document.getElementById('dice');
+  const faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  let i = 0;
+  const interval = setInterval(()=>{
+    dice.innerText = faces[Math.floor(Math.random()*6)];
+    i++;
+    if(i>10){ clearInterval(interval); }
+  }, 100);
+}
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 5, -15);
+function loadQuestion(){
+  lancerDe();
+  const q = questions[currentQ];
+  document.getElementById('questionImg').src = q.img;
+  document.getElementById('questionText').innerText = q.q;
+  document.getElementById('level').innerText = level;
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio); // Pour 60 FPS et graphiques élevés
-  document.body.appendChild(renderer.domElement);
+  const answersDiv = document.getElementById('answers');
+  answersDiv.innerHTML = '';
+  q.answers.forEach((ans, index)=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn-answer';
+    btn.innerText = ans;
+    btn.onclick = () => checkAnswer(index, btn);
+    answersDiv.appendChild(btn);
+  });
+  document.getElementById('nextBtn').style.display = 'none';
+}
 
-  // LUMIÈRE
-  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambient);
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-  dirLight.position.set(5, 10, 5);
-  scene.add(dirLight);
+function checkAnswer(selected, btn){
+  const q = questions[currentQ];
+  const allBtns = document.querySelectorAll('.btn-answer');
+  allBtns.forEach(b => b.disabled = true);
 
-  // ROUTE INFINIE
-  const roadGeo = new THREE.PlaneGeometry(20, 2000);
-  const roadMat = new THREE.MeshStandardMaterial({ color: 0x333 });
-  road = new THREE.Mesh(roadGeo, roadMat);
-  road.rotation.x = -Math.PI / 2;
-  scene.add(road);
-
-  // LIGNES BLANCHES
-  for(let i = 0; i < 40; i++){
-    const line = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.01, 5),
-      new THREE.MeshBasicMaterial({color: 0xffffff})
-    );
-    line.position.set(0, 0.01, -i * 20);
-    scene.add(line);
+  if(selected === q.correct){
+    btn.classList.add('correct');
+    score += 100 * level; // Plus de points au niveau élevé
+    document.getElementById('score').innerText = score;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[q.correct].classList.add('correct');
   }
-
-  // VOITURE
-  const carGroup = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 4), new THREE.MeshStandardMaterial({color: 0xff0000}));
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.7, 2), new THREE.MeshStandardMaterial({color: 0x222}));
-  roof.position.y = 0.85;
-  roof.position.z = -0.2;
-  carGroup.add(body, roof);
-  car = carGroup;
-  car.position.y = 0.5;
-  scene.add(car);
-
-  // CONTRÔLES CLAVIER
-  window.addEventListener('keydown', e => keys[e.key] = true);
-  window.addEventListener('keyup', e => keys[e.key] = false);
-  window.addEventListener('resize', onResize);
+  document.getElementById('nextBtn').style.display = 'inline-block';
 }
 
-// BOUCLE DE JEU 60 FPS
-function animate() {
-  if(!gameStarted) return;
-  requestAnimationFrame(animate);
-  
-  const delta = clock.getDelta(); // Pour avoir 60 FPS stable
-
-  // CONTRÔLES
-  if(keys['ArrowUp']) speed += 100 * delta;
-  if(keys['ArrowDown']) speed -= 150 * delta;
-  if(keys['ArrowLeft']) steer = 1;
-  else if(keys['ArrowRight']) steer = -1;
-  else steer = 0;
-
-  speed = Math.max(0, Math.min(speed, maxSpeed));
-  speed *= 0.98; // Friction
-
-  // DÉPLACEMENT
-  car.position.x += steer * 10 * delta;
-  car.position.x = Math.max(-8, Math.min(8, car.position.x)); // Limite route
-  car.rotation.z = steer * 0.3;
-  
-  road.position.z += speed * delta;
-  if(road.position.z > 100) road.position.z = 0; // Route infinie
-
-  // CAMERA QUI SUIT
-  camera.position.x += (car.position.x - camera.position.x) * 0.1;
-  camera.lookAt(car.position);
-
-  // UI
-  document.getElementById('speed').innerText = Math.round(speed) + " KM/H";
-  document.getElementById('level').innerText = `Niveau ${level} / 5`;
-
-  // PASSER NIVEAU
-  if(speed > 180 && level < 5){
-    level++;
-    maxSpeed += 20;
-    scene.background = new THREE.Color(0x000011 + level * 20000); // Change décor
+function nextQuestion(){
+  currentQ++;
+  if(currentQ >= questions.length){
+    document.getElementById('gameBox').style.display = 'none';
+    document.getElementById('endScreen').style.display = 'flex';
+    document.getElementById('finalScore').innerText = "Ton score final: " + score + " points";
+    return;
   }
-
-  renderer.render(scene, camera);
-}
-
-function onResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  level = Math.floor(currentQ/2) + 1; // Monte de niveau chaque 2 questions
+  loadQuestion();
 }
 </script>
 </body>
