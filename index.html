@@ -3,85 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YA FOY - Jeu de Devinette CI</title>
+<title>YA FOY CI - Jeu Devinette</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins', Arial}
-body {
-  background: linear-gradient(180deg,#0B3D2E,#1A5D4A);
-  min-height:100vh; color:#fff; overflow:hidden;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial'}
+body { background:#0B3D2E; color:#fff; }
+.header { text-align:center; padding:15px; }
+.header h2 { font-size:18px; margin-bottom:10px; }
+.logo { display:flex; justify-content:center; gap:5px; margin:10px 0; }
+.logo div { background:#FFD700; color:#0B3D2E; font-size:28px; font-weight:900; padding:5px 12px; border-radius:8px; }
+.main-img { width:200px; height:200px; border-radius:20px; object-fit:cover; margin:10px auto; border:4px solid #FFD700; }
 
-/* HEADER */
-.top-bar {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:15px 20px; background:#0B3D2E;
-}
-.back-btn { font-size:24px; cursor:pointer; }
-.title { font-size:18px; font-weight:bold; text-align:center; flex:1; }
-
-/* CHOIX THEME */
-.theme-screen { padding:20px; text-align:center; }
-.logo-yafoy { font-size:40px; font-weight:900; color:#FFD700; margin:10px 0; }
-.logo-yafoy span { background:#FFD700; color:#0B3D2E; padding:5px 8px; border-radius:8px; margin:0 2px; }
-.tabs { display:flex; gap:10px; margin:20px 0; }
-.tab { flex:1; padding:12px; background:#0B3D2E; border-radius:12px 12px 0 0; font-weight:bold; cursor:pointer; }
+.tabs { display:flex; margin:20px; gap:10px; }
+.tab { flex:1; padding:12px; background:#0F4F3A; border-radius:12px; text-align:center; font-weight:bold; cursor:pointer; }
 .tab.active { background:#FFD700; color:#0B3D2E; }
+
+.theme-list { padding:0 15px; }
 .theme-card {
   background:#F5E6C8; color:#333; border-radius:15px; margin:12px 0; padding:15px;
-  display:flex; align-items:center; gap:15px; cursor:pointer; transition:0.2s;
+  display:flex; align-items:center; gap:15px; cursor:pointer;
 }
-.theme-card:hover { transform:scale(1.02); }
 .theme-card h3 { color:#E67E00; font-size:20px; }
-.theme-card img { width:80px; height:80px; border-radius:10px; object-fit:cover; margin-left:auto; }
-.flag { width:30px; height:20px; border-radius:3px; }
+.theme-card p { font-size:14px; }
+.theme-card img { width:70px; height:70px; border-radius:10px; object-fit:cover; margin-left:auto; }
+.flag { width:35px; height:25px; border-radius:4px; }
 
 /* ECRAN JEU */
 .game-screen { display:none; padding:15px; }
-.header-game {
-  display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;
-}
-.level { font-weight:bold; }
-.coins { background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; display:flex; align-items:center; gap:5px; }
-.coin { width:20px; height:20px; background:gold; border-radius:50%; }
-
+.top-game { display:flex; justify-content:space-between; align-items:center; }
+.coins { background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; }
 .images { display:flex; gap:10px; margin:15px 0; }
 .img-box { flex:1; background:#fff; padding:5px; border-radius:10px; }
-.img-box img { width:100%; height:120px; object-fit:cover; border-radius:8px; }
-
-.controls { display:flex; justify-content:center; gap:20px; margin:15px 0; }
-.ctrl-btn { width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; }
-
-.answer-slots { display:flex; justify-content:center; gap:8px; margin:20px 0; }
-.slot { width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:bold; }
-
-.keyboard { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; padding:0 10px; }
-.key { background:#E67E00; color:#fff; border:none; padding:12px; border-radius:8px; font-size:18px; font-weight:bold; cursor:pointer; }
-.key.used { opacity:0.3; }
-
-.popup-lock {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center;
-}
-.lock-box { background:#F5E6C8; color:#333; padding:30px; border-radius:20px; text-align:center; max-width:350px; }
-.lock-box h2 { color:#E67E00; margin:10px 0; }
+.img-box img { width:100%; height:130px; object-fit:cover; border-radius:8px; }
+.slots { display:flex; justify-content:center; gap:8px; margin:20px 0; }
+.slot { width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; }
+.keys { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+.key { background:#E67E00; border:none; padding:12px; border-radius:8px; font-size:18px; font-weight:bold; color:#fff; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<!-- ECRAN CHOIX THEME -->
-<div class="theme-screen" id="themeScreen">
-  <div class="back-btn">←</div>
-  <h2>Choisissez un thème pour commencer</h2>
-  <div class="logo-yafoy"><span>Y</span><span>A</span> <span>F</span><span>O</span><span>Y</span></div>
-  <img src="https://i.imgur.com/8Km9tLL.png" style="width:200px"> <!-- Elephant + Avion + Fille -->
-
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('ci')">Cote d'Ivoire</div>
-    <div class="tab" onclick="switchTab('monde')">Monde</div>
+<!-- ECRAN ACCUEIL -->
+<div id="home">
+  <div class="header">
+    <div>←</div>
+    <h2>Choisissez un thème pour commencer</h2>
+    <div class="logo"><div>Y</div><div>A</div><div>F</div><div>O</div><div>Y</div></div>
+    <img src="/mnt/data/wa_image_2719975707242398077_3" class="main-img"> <!-- TA PHOTO -->
   </div>
 
-  <div id="ciThemes">
-    <div class="theme-card" onclick="startGame('Classique')">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('ci')">Cote d'Ivoire</div>
+    <div class="tab" onclick="showTab('monde')">Monde</div>
+  </div>
+
+  <div class="theme-list" id="ci">
+    <div class="theme-card" onclick="startGame('ci-classique')">
       <div>
         <h3>Classique</h3>
         <p>Culture et Argot</p>
@@ -89,7 +65,7 @@ body {
       </div>
       <img src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Basilique_Notre-Dame_de_la_Paix_de_Yamoussoukro.jpg">
     </div>
-    <div class="theme-card" onclick="showLock('CAN 2023', 500)">
+    <div class="theme-card" onclick="startGame('ci-can')">
       <div>
         <h3>CAN 2023</h3>
         <p>Retour sur la CAN</p>
@@ -97,7 +73,7 @@ body {
       </div>
       <img src="https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=200">
     </div>
-    <div class="theme-card" onclick="startGame('Musique')">
+    <div class="theme-card" onclick="startGame('ci-musique')">
       <div>
         <h3>Musique</h3>
         <p>Culture Musicale</p>
@@ -107,8 +83,8 @@ body {
     </div>
   </div>
 
-  <div id="mondeThemes" style="display:none">
-    <div class="theme-card" onclick="startGame('Classique Monde')">
+  <div class="theme-list" id="monde" style="display:none">
+    <div class="theme-card" onclick="startGame('monde-classique')">
       <div>
         <h3>Classique</h3>
         <p>Culture générale</p>
@@ -116,151 +92,120 @@ body {
       </div>
       <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=200">
     </div>
-    <div class="theme-card" onclick="startGame('Drapeaux')">
+    <div class="theme-card" onclick="startGame('monde-drapeaux')">
       <div>
         <h3>Drapeaux</h3>
         <p>Trouve le pays</p>
         <img src="https://flagcdn.com/w20/us.png" class="flag">
       </div>
-      <img src="https://flagcdn.com/ca.svg" style="height:60px">
+      <img src="https://flagcdn.com/ca.svg" style="height:50px">
     </div>
   </div>
 </div>
 
 <!-- ECRAN JEU -->
-<div class="game-screen" id="gameScreen">
-  <div class="header-game">
-    <div class="level">Niveau<br><span id="level">1</span></div>
-    <div class="coins"><div class="coin"></div><span id="coins">250</span></div>
-    <div class="back-btn" onclick="goHome()">🏠</div>
+<div class="game-screen" id="game">
+  <div class="top-game">
+    <div onclick="goHome()">←</div>
+    <div>Niveau <span id="lvl">1</span></div>
+    <div class="coins">🪙 <span id="coins">250</span></div>
   </div>
 
   <div class="images">
-    <div class="img-box"><img id="img1" src=""></div>
-    <div class="img-box"><img id="img2" src=""></div>
+    <div class="img-box"><img id="img1"></div>
+    <div class="img-box"><img id="img2"></div>
   </div>
 
-  <div class="controls">
-    <div class="ctrl-btn" onclick="undo()">↩️</div>
-    <div class="ctrl-btn" onclick="hint()">?</div>
-    <div class="ctrl-btn" onclick="shuffle()">🔄</div>
-  </div>
-
-  <div class="answer-slots" id="slots"></div>
-  <div class="keyboard" id="keyboard"></div>
-</div>
-
-<!-- POPUP DEBLOQUER -->
-<div class="popup-lock" id="lockPopup">
-  <div class="lock-box">
-    <div style="font-size:50px">🔒</div>
-    <h2 id="lockTitle"></h2>
-    <img id="lockImg" style="width:100%; border-radius:10px; margin:10px 0;">
-    <p>Pour débloquer ce thème, il vous faut:</p>
-    <div style="background:#fff; padding:10px; border-radius:20px; margin:10px 0; display:flex; align-items:center; justify-content:center; gap:10px;">
-      <b id="lockPrice"></b> <div class="coin"></div>
-    </div>
-    <button onclick="closeLock()" style="background:#E67E00; color:#fff; border:none; padding:10px 30px; border-radius:10px; font-weight:bold;">Retour</button>
-  </div>
+  <div class="slots" id="slots"></div>
+  <div class="keys" id="keys"></div>
 </div>
 
 <script>
 let coins = 250;
 let level = 1;
-let currentWord = "HOTEL";
+let currentTheme = '';
 let answer = [];
 
-const levels = [
-  {word:"HOTEL", img1:"https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=400", img2:"https://images.unsplash.com/photo-1551836022-deb4988cc6c0?q=80&w=400", letters:"C V X R H O B I P I B E"},
-  {word:"ELEPHANT", img1:"https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?q=80&w=400", img2:"https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?q=80&w=400", letters:"E L E P H A N T X Q Z"},
-  {word:"ABIDJAN", img1:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400", img2:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400", letters:"A B I D J A N C F G"}
-];
+const allLevels = {
+  'ci-classique': [
+    {word:"HOTEL", img1:"https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=400", img2:"https://images.unsplash.com/photo-1551836022-deb4988cc6c0?q=80&w=400", letters:"H O T E L C V X"},
+    {word:"ABIDJAN", img1:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400", img2:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400", letters:"A B I D J A N C"}
+  ],
+  'ci-can': [
+    {word:"FOOT", img1:"https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=400", img2:"https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=400", letters:"F O O T B A L L"},
+    {word:"STADE", img1:"https://images.unsplash.com/photo-1552667466-07770ae11077?q=80&w=400", img2:"https://images.unsplash.com/photo-1552667466-07770ae11077?q=80&w=400", letters:"S T A D E P I L E"}
+  ],
+  'ci-musique': [
+    {word:"ZOUGOU", img1:"https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400", img2:"https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400", letters:"Z O U G O U M U S"},
+    {word:"COUPE", img1:"https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=400", img2:"https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=400", letters:"C O U P E D E C A"}
+  ],
+  'monde-classique': [
+    {word:"PARIS", img1:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", img2:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", letters:"P A R I S T O U R"},
+    {word:"TOUR", img1:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", img2:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", letters:"T O U R E I F F E"}
+  ],
+  'monde-drapeaux': [
+    {word:"CANADA", img1:"https://flagcdn.com/ca.svg", img2:"https://flagcdn.com/ca.svg", letters:"C A N A D A B C"},
+    {word:"FRANCE", img1:"https://flagcdn.com/fr.svg", img2:"https://flagcdn.com/fr.svg", letters:"F R A N C E G H"}
+  ]
+};
 
-function switchTab(tab){
+function showTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('ciThemes').style.display = tab==='ci'?'block':'none';
-  document.getElementById('mondeThemes').style.display = tab==='monde'?'block':'none';
+  document.getElementById('ci').style.display = tab==='ci'?'block':'none';
+  document.getElementById('monde').style.display = tab==='monde'?'block':'none';
 }
-
-function showLock(name, price){
-  document.getElementById('lockPopup').style.display = 'flex';
-  document.getElementById('lockTitle').innerText = name;
-  document.getElementById('lockPrice').innerText = price;
-  document.getElementById('lockImg').src = "https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=400";
-}
-function closeLock(){ document.getElementById('lockPopup').style.display = 'none'; }
 
 function startGame(theme){
-  document.getElementById('themeScreen').style.display = 'none';
-  document.getElementById('gameScreen').style.display = 'block';
+  currentTheme = theme;
+  level = 1;
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
   loadLevel();
 }
 
 function loadLevel(){
-  const lvl = levels[(level-1) % levels.length];
-  currentWord = lvl.word;
+  const lvl = allLevels[currentTheme][(level-1) % allLevels[currentTheme].length];
+  document.getElementById('lvl').innerText = level;
   document.getElementById('img1').src = lvl.img1;
   document.getElementById('img2').src = lvl.img2;
-  document.getElementById('level').innerText = level;
 
-  // Créer les slots
+  // Slots
   const slots = document.getElementById('slots');
   slots.innerHTML = '';
   answer = [];
-  for(let i=0; i<currentWord.length; i++){
-    const slot = document.createElement('div');
-    slot.className = 'slot';
-    slot.dataset.index = i;
-    slots.appendChild(slot);
+  for(let i=0; i<lvl.word.length; i++){
+    slots.innerHTML += `<div class="slot"></div>`;
     answer.push('');
   }
 
-  // Créer clavier
-  const keyboard = document.getElementById('keyboard');
-  keyboard.innerHTML = '';
-  lvl.letters.split(' ').forEach(letter=>{
-    const btn = document.createElement('button');
-    btn.className = 'key';
-    btn.innerText = letter;
-    btn.onclick = () => addLetter(letter, btn);
-    keyboard.appendChild(btn);
+  // Clavier
+  const keys = document.getElementById('keys');
+  keys.innerHTML = '';
+  lvl.letters.split(' ').forEach(l=>{
+    keys.innerHTML += `<button class="key" onclick="addLetter('${l}',this)">${l}</button>`;
   });
 }
 
-function addLetter(letter, btn){
-  const emptyIndex = answer.indexOf('');
-  if(emptyIndex!== -1){
-    answer[emptyIndex] = letter;
-    document.querySelectorAll('.slot')[emptyIndex].innerText = letter;
-    btn.classList.add('used');
-    checkWin();
+function addLetter(l, btn){
+  const i = answer.indexOf('');
+  if(i!==-1){
+    answer[i]=l;
+    document.querySelectorAll('.slot')[i].innerText=l;
+    btn.style.opacity=0.3;
+    if(answer.join('') === allLevels[currentTheme][(level-1)%allLevels[currentTheme].length].word){
+      coins+=50;
+      document.getElementById('coins').innerText=coins;
+      alert('Bravo! +50 pièces');
+      level++;
+      setTimeout(loadLevel,800);
+    }
   }
 }
 
-function checkWin(){
-  if(!answer.includes('') && answer.join('') === currentWord){
-    coins += 50;
-    document.getElementById('coins').innerText = coins;
-    alert('Bravo! +50 pièces');
-    level++;
-    setTimeout(loadLevel, 1000);
-  }
-}
-
-function undo(){
-  const lastIndex = answer.lastIndexOf(answer.filter(l=>l!=='').pop());
-  if(lastIndex!== -1){
-    answer[lastIndex] = '';
-    document.querySelectorAll('.slot')[lastIndex].innerText = '';
-    document.querySelectorAll('.key.used')[document.querySelectorAll('.key.used').length-1].classList.remove('used');
-  }
-}
-function hint(){ alert("Indice: Le mot a " + currentWord.length + " lettres"); }
-function shuffle(){ loadLevel(); }
 function goHome(){
-  document.getElementById('gameScreen').style.display = 'none';
-  document.getElementById('themeScreen').style.display = 'block';
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('home').style.display = 'block';
 }
 </script>
 </body>
