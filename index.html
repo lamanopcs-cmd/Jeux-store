@@ -4,209 +4,1365 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YA FOY CI - Jeu Devinette</title>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Arial'}
-body { background:#0B3D2E; color:#fff; }
-.header { text-align:center; padding:15px; }
-.header h2 { font-size:18px; margin-bottom:10px; }
-.logo { display:flex; justify-content:center; gap:5px; margin:10px 0; }
-.logo div { background:#FFD700; color:#0B3D2E; font-size:28px; font-weight:900; padding:5px 12px; border-radius:8px; }
-.main-img { width:200px; height:200px; border-radius:20px; object-fit:cover; margin:10px auto; border:4px solid #FFD700; }
-
-.tabs { display:flex; margin:20px; gap:10px; }
-.tab { flex:1; padding:12px; background:#0F4F3A; border-radius:12px; text-align:center; font-weight:bold; cursor:pointer; }
-.tab.active { background:#FFD700; color:#0B3D2E; }
-
-.theme-list { padding:0 15px; }
-.theme-card {
-  background:#F5E6C8; color:#333; border-radius:15px; margin:12px 0; padding:15px;
-  display:flex; align-items:center; gap:15px; cursor:pointer;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
 }
-.theme-card h3 { color:#E67E00; font-size:20px; }
-.theme-card p { font-size:14px; }
-.theme-card img { width:70px; height:70px; border-radius:10px; object-fit:cover; margin-left:auto; }
-.flag { width:35px; height:25px; border-radius:4px; }
 
-/* ECRAN JEU */
-.game-screen { display:none; padding:15px; }
-.top-game { display:flex; justify-content:space-between; align-items:center; }
-.coins { background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; }
-.images { display:flex; gap:10px; margin:15px 0; }
-.img-box { flex:1; background:#fff; padding:5px; border-radius:10px; }
-.img-box img { width:100%; height:130px; object-fit:cover; border-radius:8px; }
-.slots { display:flex; justify-content:center; gap:8px; margin:20px 0; }
-.slot { width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:bold; }
-.keys { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
-.key { background:#E67E00; border:none; padding:12px; border-radius:8px; font-size:18px; font-weight:bold; color:#fff; cursor:pointer; }
+body{
+    background:#063c2d;
+    color:white;
+    min-height:100vh;
+}
+
+button{
+    font-family:inherit;
+}
+
+.header{
+    text-align:center;
+    padding:20px 15px 10px;
+}
+
+.back{
+    text-align:left;
+    font-size:32px;
+    margin-bottom:5px;
+    cursor:pointer;
+}
+
+.header h1{
+    font-size:25px;
+    line-height:1.15;
+    margin-bottom:15px;
+}
+
+.logo{
+    display:flex;
+    justify-content:center;
+    gap:5px;
+    margin-bottom:18px;
+}
+
+.logo div{
+    background:#ffd400;
+    color:#073c2e;
+    font-size:36px;
+    font-weight:900;
+    width:60px;
+    height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    transform:rotate(-2deg);
+}
+
+.logo div:nth-child(2){
+    transform:rotate(2deg);
+}
+
+.logo div:nth-child(3){
+    transform:rotate(-5deg);
+}
+
+.logo div:nth-child(4){
+    transform:rotate(3deg);
+}
+
+.logo div:nth-child(5){
+    transform:rotate(-3deg);
+}
+
+/* PHOTO PRINCIPALE */
+.main-img{
+    width:220px;
+    height:220px;
+    object-fit:cover;
+    border-radius:18px;
+    display:block;
+    margin:0 auto 20px;
+    border:4px solid #ffd400;
+}
+
+/* ONGLETS */
+.tabs{
+    display:flex;
+    margin:5px 15px 18px;
+    gap:0;
+    overflow:hidden;
+    border-radius:18px;
+}
+
+.tab{
+    flex:1;
+    padding:16px 8px;
+    background:#063225;
+    color:white;
+    text-align:center;
+    font-size:17px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.tab.active{
+    background:#ffd400;
+    color:#073c2e;
+}
+
+/* THEMES */
+.theme-list{
+    padding:0 15px 30px;
+}
+
+.theme-card{
+    background:#f6e5c5;
+    color:#333;
+    border-radius:20px;
+    margin:12px 0;
+    min-height:130px;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.15s;
+}
+
+.theme-card:active{
+    transform:scale(.98);
+}
+
+.theme-info{
+    padding:16px;
+    width:50%;
+}
+
+.theme-info h3{
+    color:#e87b00;
+    font-size:25px;
+    margin-bottom:5px;
+}
+
+.theme-info p{
+    font-size:16px;
+    margin-bottom:12px;
+}
+
+.theme-icons{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.flag{
+    width:38px;
+    height:25px;
+    object-fit:cover;
+    border-radius:4px;
+}
+
+.theme-icon{
+    width:30px;
+    height:30px;
+    object-fit:cover;
+    border-radius:50%;
+}
+
+.theme-photo{
+    width:50%;
+    height:130px;
+    object-fit:cover;
+}
+
+/* ECRAN DU JEU */
+.game-screen{
+    display:none;
+    min-height:100vh;
+    padding:15px;
+    background:#073c2e;
+}
+
+.top-game{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.game-back{
+    font-size:32px;
+    cursor:pointer;
+}
+
+.level-box{
+    background:#ffd400;
+    color:#073c2e;
+    padding:9px 15px;
+    border-radius:20px;
+    font-weight:bold;
+}
+
+.coins{
+    background:rgba(255,255,255,.15);
+    padding:9px 15px;
+    border-radius:20px;
+}
+
+/* PROGRESSION */
+.progress-container{
+    background:rgba(255,255,255,.15);
+    height:8px;
+    border-radius:20px;
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.progress{
+    height:100%;
+    width:0%;
+    background:#ffd400;
+    transition:.3s;
+}
+
+/* TITRE THEME */
+.game-theme{
+    text-align:center;
+    font-size:23px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+/* IMAGES */
+.images{
+    display:flex;
+    gap:10px;
+    margin:15px 0;
+}
+
+.img-box{
+    flex:1;
+    background:white;
+    padding:5px;
+    border-radius:12px;
+}
+
+.img-box img{
+    width:100%;
+    height:145px;
+    object-fit:cover;
+    border-radius:9px;
+}
+
+/* REPONSE */
+.slots{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    flex-wrap:wrap;
+    margin:20px 0;
+}
+
+.slot{
+    width:42px;
+    height:45px;
+    background:rgba(255,255,255,.15);
+    border:2px solid rgba(255,255,255,.3);
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    font-weight:bold;
+}
+
+/* CLAVIER */
+.keys{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:8px;
+    margin-top:20px;
+}
+
+.key{
+    background:#e87b00;
+    border:none;
+    padding:12px 4px;
+    border-radius:9px;
+    font-size:18px;
+    font-weight:bold;
+    color:white;
+    cursor:pointer;
+}
+
+.key:active{
+    transform:scale(.94);
+}
+
+.key.used{
+    opacity:.25;
+}
+
+/* BOUTONS */
+.game-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+}
+
+.action-btn{
+    flex:1;
+    border:none;
+    padding:13px;
+    border-radius:12px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.delete-btn{
+    background:#b93838;
+    color:white;
+}
+
+.next-btn{
+    background:#ffd400;
+    color:#073c2e;
+    display:none;
+}
+
+/* RESPONSIVE */
+@media(max-width:420px){
+
+    .logo div{
+        width:53px;
+        height:53px;
+        font-size:31px;
+    }
+
+    .main-img{
+        width:190px;
+        height:190px;
+    }
+
+    .theme-info h3{
+        font-size:21px;
+    }
+
+    .theme-info p{
+        font-size:14px;
+    }
+
+    .keys{
+        grid-template-columns:repeat(5,1fr);
+    }
+
+    .img-box img{
+        height:125px;
+    }
+}
 </style>
 </head>
+
 <body>
 
-<!-- ECRAN ACCUEIL -->
+<!-- =========================
+     ACCUEIL
+========================= -->
+
 <div id="home">
-  <div class="header">
-    <div>←</div>
-    <h2>Choisissez un thème pour commencer</h2>
-    <div class="logo"><div>Y</div><div>A</div><div>F</div><div>O</div><div>Y</div></div>
-    <img src="/mnt/data/wa_image_2719975707242398077_3" class="main-img"> <!-- TA PHOTO -->
-  </div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('ci')">Cote d'Ivoire</div>
-    <div class="tab" onclick="showTab('monde')">Monde</div>
-  </div>
+    <div class="header">
 
-  <div class="theme-list" id="ci">
-    <div class="theme-card" onclick="startGame('ci-classique')">
-      <div>
-        <h3>Classique</h3>
-        <p>Culture et Argot</p>
-        <img src="https://flagcdn.com/ci.svg" class="flag">
-      </div>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Basilique_Notre-Dame_de_la_Paix_de_Yamoussoukro.jpg">
-    </div>
-    <div class="theme-card" onclick="startGame('ci-can')">
-      <div>
-        <h3>CAN 2023</h3>
-        <p>Retour sur la CAN</p>
-        <img src="https://flagcdn.com/ci.svg" class="flag">
-      </div>
-      <img src="https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=200">
-    </div>
-    <div class="theme-card" onclick="startGame('ci-musique')">
-      <div>
-        <h3>Musique</h3>
-        <p>Culture Musicale</p>
-        <img src="https://flagcdn.com/ci.svg" class="flag">
-      </div>
-      <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=200">
-    </div>
-  </div>
+        <div class="back">←</div>
 
-  <div class="theme-list" id="monde" style="display:none">
-    <div class="theme-card" onclick="startGame('monde-classique')">
-      <div>
-        <h3>Classique</h3>
-        <p>Culture générale</p>
-        <img src="https://flagcdn.com/w20/us.png" class="flag">
-      </div>
-      <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=200">
+        <h1>
+            Choisissez un thème pour<br>
+            commencer
+        </h1>
+
+        <div class="logo">
+            <div>Y</div>
+            <div>A</div>
+            <div>F</div>
+            <div>O</div>
+            <div>Y</div>
+        </div>
+
+        <!-- TA PHOTO -->
+        <img
+            src="mon-image.png"
+            class="main-img"
+            alt="Ma photo"
+        >
+
     </div>
-    <div class="theme-card" onclick="startGame('monde-drapeaux')">
-      <div>
-        <h3>Drapeaux</h3>
-        <p>Trouve le pays</p>
-        <img src="https://flagcdn.com/w20/us.png" class="flag">
-      </div>
-      <img src="https://flagcdn.com/ca.svg" style="height:50px">
+
+    <!-- ONGLETS -->
+    <div class="tabs">
+
+        <div
+            class="tab active"
+            id="tab-ci"
+            onclick="showTab('ci')"
+        >
+            Côte d'Ivoire
+        </div>
+
+        <div
+            class="tab"
+            id="tab-monde"
+            onclick="showTab('monde')"
+        >
+            Monde
+        </div>
+
     </div>
-  </div>
+
+
+    <!-- =========================
+         CÔTE D'IVOIRE
+    ========================== -->
+
+    <div class="theme-list" id="ci">
+
+        <!-- CLASSIQUE -->
+        <div
+            class="theme-card"
+            onclick="startGame('ci-classique')"
+        >
+
+            <div class="theme-info">
+
+                <h3>Classique</h3>
+
+                <p>Culture et Argot</p>
+
+                <div class="theme-icons">
+                    🇨🇮
+                    <span>🎯</span>
+                </div>
+
+            </div>
+
+            <img
+                class="theme-photo"
+                src="https://upload.wikimedia.org/wikipedia/commons/7/7d/Basilique_Notre-Dame_de_la_Paix_de_Yamoussoukro.jpg"
+                alt="Classique"
+            >
+
+        </div>
+
+
+        <!-- CAN -->
+        <div
+            class="theme-card"
+            onclick="startGame('ci-can')"
+        >
+
+            <div class="theme-info">
+
+                <h3>CAN 2023</h3>
+
+                <p>Retour sur la CAN</p>
+
+                <div class="theme-icons">
+                    🇨🇮
+                    <span>⚽</span>
+                </div>
+
+            </div>
+
+            <img
+                class="theme-photo"
+                src="https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=500"
+                alt="CAN"
+            >
+
+        </div>
+
+
+        <!-- MUSIQUE -->
+        <div
+            class="theme-card"
+            onclick="startGame('ci-musique')"
+        >
+
+            <div class="theme-info">
+
+                <h3>Musique</h3>
+
+                <p>Culture musicale</p>
+
+                <div class="theme-icons">
+                    🇨🇮
+                    <span>🎵</span>
+                </div>
+
+            </div>
+
+            <img
+                class="theme-photo"
+                src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=500"
+                alt="Musique"
+            >
+
+        </div>
+
+
+        <!-- PEOPLE -->
+        <div
+            class="theme-card"
+            onclick="startGame('ci-people')"
+        >
+
+            <div class="theme-info">
+
+                <h3>People</h3>
+
+                <p>Buzz et Culture</p>
+
+                <div class="theme-icons">
+                    🇨🇮
+                    <span>👤</span>
+                </div>
+
+            </div>
+
+            <img
+                class="theme-photo"
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500"
+                alt="People"
+            >
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         MONDE
+    ========================== -->
+
+    <div
+        class="theme-list"
+        id="monde"
+        style="display:none"
+    >
+
+        <!-- MONDE CLASSIQUE -->
+        <div
+            class="theme-card"
+            onclick="startGame('monde-classique')"
+        >
+
+            <div class="theme-info">
+
+                <h3>Classique</h3>
+
+                <p>Culture générale</p>
+
+                <div class="theme-icons">
+                    🌍
+                    <span>🎯</span>
+                </div>
+
+            </div>
+
+            <img
+                class="theme-photo"
+                src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=500"
+                alt="Monde"
+            >
+
+        </div>
+
+
+        <!-- DRAPEAUX -->
+        <div
+            class="theme-card"
+            onclick="startGame('monde-drapeaux')"
+        >
+
+            <div class="theme-info">
+
+                <h3>Drapeaux</h3>
+
+                <p>Trouve le pays</p>
+
+                <div class="theme-icons">
+                    🌍
+                    <span>🏳️</span>
+                </div>
+
+            </div>
+
+            <img
+                class="theme-photo"
+                src="https://flagcdn.com/w640/ca.png"
+                alt="Drapeau"
+            >
+
+        </div>
+
+    </div>
+
 </div>
 
-<!-- ECRAN JEU -->
-<div class="game-screen" id="game">
-  <div class="top-game">
-    <div onclick="goHome()">←</div>
-    <div>Niveau <span id="lvl">1</span></div>
-    <div class="coins">🪙 <span id="coins">250</span></div>
-  </div>
 
-  <div class="images">
-    <div class="img-box"><img id="img1"></div>
-    <div class="img-box"><img id="img2"></div>
-  </div>
+<!-- =========================
+     ECRAN JEU
+========================= -->
 
-  <div class="slots" id="slots"></div>
-  <div class="keys" id="keys"></div>
+<div
+    class="game-screen"
+    id="game"
+>
+
+    <div class="top-game">
+
+        <div
+            class="game-back"
+            onclick="goHome()"
+        >
+            ←
+        </div>
+
+        <div class="level-box">
+            Niveau <span id="lvl">1</span>
+        </div>
+
+        <div class="coins">
+            🪙 <span id="coins">250</span>
+        </div>
+
+    </div>
+
+
+    <!-- BARRE DE PROGRESSION -->
+
+    <div class="progress-container">
+
+        <div
+            class="progress"
+            id="progress"
+        ></div>
+
+    </div>
+
+
+    <div
+        class="game-theme"
+        id="gameTheme"
+    >
+        Classique
+    </div>
+
+
+    <!-- IMAGES -->
+
+    <div class="images">
+
+        <div class="img-box">
+            <img id="img1" alt="">
+        </div>
+
+        <div class="img-box">
+            <img id="img2" alt="">
+        </div>
+
+    </div>
+
+
+    <!-- CASES -->
+
+    <div
+        class="slots"
+        id="slots"
+    ></div>
+
+
+    <!-- CLAVIER -->
+
+    <div
+        class="keys"
+        id="keys"
+    ></div>
+
+
+    <!-- BOUTONS -->
+
+    <div class="game-buttons">
+
+        <button
+            class="action-btn delete-btn"
+            onclick="deleteLetter()"
+        >
+            Effacer
+        </button>
+
+        <button
+            class="action-btn next-btn"
+            id="nextBtn"
+            onclick="nextLevel()"
+        >
+            Niveau suivant →
+        </button>
+
+    </div>
+
 </div>
+
 
 <script>
+
+/* =========================
+   VARIABLES
+========================= */
+
 let coins = 250;
 let level = 1;
-let currentTheme = '';
+let currentTheme = "";
 let answer = [];
 
+
+/* =========================
+   DONNÉES DES NIVEAUX
+========================= */
+
 const allLevels = {
-  'ci-classique': [
-    {word:"HOTEL", img1:"https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=400", img2:"https://images.unsplash.com/photo-1551836022-deb4988cc6c0?q=80&w=400", letters:"H O T E L C V X"},
-    {word:"ABIDJAN", img1:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400", img2:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400", letters:"A B I D J A N C"}
-  ],
-  'ci-can': [
-    {word:"FOOT", img1:"https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=400", img2:"https://images.unsplash.com/photo-1577223625816-7546f13ea8e7?q=80&w=400", letters:"F O O T B A L L"},
-    {word:"STADE", img1:"https://images.unsplash.com/photo-1552667466-07770ae11077?q=80&w=400", img2:"https://images.unsplash.com/photo-1552667466-07770ae11077?q=80&w=400", letters:"S T A D E P I L E"}
-  ],
-  'ci-musique': [
-    {word:"ZOUGOU", img1:"https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400", img2:"https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=400", letters:"Z O U G O U M U S"},
-    {word:"COUPE", img1:"https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=400", img2:"https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=400", letters:"C O U P E D E C A"}
-  ],
-  'monde-classique': [
-    {word:"PARIS", img1:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", img2:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", letters:"P A R I S T O U R"},
-    {word:"TOUR", img1:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", img2:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=400", letters:"T O U R E I F F E"}
-  ],
-  'monde-drapeaux': [
-    {word:"CANADA", img1:"https://flagcdn.com/ca.svg", img2:"https://flagcdn.com/ca.svg", letters:"C A N A D A B C"},
-    {word:"FRANCE", img1:"https://flagcdn.com/fr.svg", img2:"https://flagcdn.com/fr.svg", letters:"F R A N C E G H"}
-  ]
+
+
+    /* =====================
+       CÔTE D'IVOIRE
+       CLASSIQUE
+    ====================== */
+
+    "ci-classique":[
+
+        {
+            word:"ABIDJAN",
+            img1:"https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=500",
+            letters:"A B I D J N C R T"
+        },
+
+        {
+            word:"IVOIRE",
+            img1:"https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?q=80&w=500",
+            letters:"I V O I R E A C T"
+        },
+
+        {
+            word:"YOPOUGON",
+            img1:"https://images.unsplash.com/photo-1500534623283-312aade485b7?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=500",
+            letters:"Y O P O U G O N A B"
+        },
+
+        {
+            word:"MAQUIS",
+            img1:"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?q=80&w=500",
+            letters:"M A Q U I S R T O"
+        },
+
+        {
+            word:"PLAGE",
+            img1:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1500534623283-312aade485b7?q=80&w=500",
+            letters:"P L A G E C R S T"
+        }
+
+    ],
+
+
+    /* =====================
+       CAN
+    ====================== */
+
+    "ci-can":[
+
+        {
+            word:"FOOT",
+            img1:"https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=500",
+            letters:"F O O T B A L L"
+        },
+
+        {
+            word:"STADE",
+            img1:"https://images.unsplash.com/photo-1552667466-07770ae11077?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1526232761682-d26e03ac148e?q=80&w=500",
+            letters:"S T A D E F O I"
+        },
+
+        {
+            word:"ELEPHANTS",
+            img1:"https://images.unsplash.com/photo-1521412644187-c49fa049e84d?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1553778263-73a83bab9b0c?q=80&w=500",
+            letters:"E L E P H A N T S"
+        },
+
+        {
+            word:"CAN",
+            img1:"https://images.unsplash.com/photo-1521412644187-c49fa049e84d?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=500",
+            letters:"C A N F O O T B"
+        },
+
+        {
+            word:"CHAMPION",
+            img1:"https://images.unsplash.com/photo-1521412644187-c49fa049e84d?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1552667466-07770ae11077?q=80&w=500",
+            letters:"C H A M P I O N"
+        }
+
+    ],
+
+
+    /* =====================
+       MUSIQUE
+    ====================== */
+
+    "ci-musique":[
+
+        {
+            word:"ZOUGLOU",
+            img1:"https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=500",
+            letters:"Z O U G L O U M S"
+        },
+
+        {
+            word:"COUPE",
+            img1:"https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=500",
+            letters:"C O U P E D A B R"
+        },
+
+        {
+            word:"RAP",
+            img1:"https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1506157786151-b8491531f063?q=80&w=500",
+            letters:"R A P M U S I C"
+        },
+
+        {
+            word:"DJ",
+            img1:"https://images.unsplash.com/photo-1571266028243-d220c19c7d38?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=500",
+            letters:"D J A B C M U S"
+        },
+
+        {
+            word:"CHANTEUR",
+            img1:"https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1506157786151-b8491531f063?q=80&w=500",
+            letters:"C H A N T E U R"
+        }
+
+    ],
+
+
+    /* =====================
+       PEOPLE
+    ====================== */
+
+    "ci-people":[
+
+        {
+            word:"STAR",
+            img1:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500",
+            letters:"S T A R P E O L"
+        },
+
+        {
+            word:"BUZZ",
+            img1:"https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=500",
+            letters:"B U Z Z A C D E"
+        },
+
+        {
+            word:"PEOPLE",
+            img1:"https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=500",
+            letters:"P E O P L E A R"
+        },
+
+        {
+            word:"STAR",
+            img1:"https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=500",
+            letters:"S T A R B U Z Z"
+        },
+
+        {
+            word:"ACTEUR",
+            img1:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500",
+            letters:"A C T E U R P O"
+        }
+
+    ],
+
+
+    /* =====================
+       MONDE CLASSIQUE
+    ====================== */
+
+    "monde-classique":[
+
+        {
+            word:"PARIS",
+            img1:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=500",
+            letters:"P A R I S T O U"
+        },
+
+        {
+            word:"LONDRES",
+            img1:"https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1529655683826-aba9b3e77383?q=80&w=500",
+            letters:"L O N D R E S A"
+        },
+
+        {
+            word:"AFRIQUE",
+            img1:"https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?q=80&w=500",
+            letters:"A F R I Q U E M"
+        },
+
+        {
+            word:"EGYPTE",
+            img1:"https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1568322445389-f64ac2515020?q=80&w=500",
+            letters:"E G Y P T E A B"
+        },
+
+        {
+            word:"TOKYO",
+            img1:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=500",
+            img2:"https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?q=80&w=500",
+            letters:"T O K Y O A B C"
+        }
+
+    ],
+
+
+    /* =====================
+       DRAPEAUX
+    ====================== */
+
+    "monde-drapeaux":[
+
+        {
+            word:"CANADA",
+            img1:"https://flagcdn.com/w640/ca.png",
+            img2:"https://flagcdn.com/w640/ca.png",
+            letters:"C A N A D A B F"
+        },
+
+        {
+            word:"FRANCE",
+            img1:"https://flagcdn.com/w640/fr.png",
+            img2:"https://flagcdn.com/w640/fr.png",
+            letters:"F R A N C E G H"
+        },
+
+        {
+            word:"BRESIL",
+            img1:"https://flagcdn.com/w640/br.png",
+            img2:"https://flagcdn.com/w640/br.png",
+            letters:"B R E S I L A C"
+        },
+
+        {
+            word:"JAPON",
+            img1:"https://flagcdn.com/w640/jp.png",
+            img2:"https://flagcdn.com/w640/jp.png",
+            letters:"J A P O N C D E"
+        },
+
+        {
+            word:"GHANA",
+            img1:"https://flagcdn.com/w640/gh.png",
+            img2:"https://flagcdn.com/w640/gh.png",
+            letters:"G H A N A C D E"
+        }
+
+    ]
+
 };
 
+
+/* =========================
+   NOMS DES THÈMES
+========================= */
+
+const themeNames = {
+
+    "ci-classique":"🇨🇮 Classique",
+
+    "ci-can":"🇨🇮 CAN 2023",
+
+    "ci-musique":"🇨🇮 Musique",
+
+    "ci-people":"🇨🇮 People",
+
+    "monde-classique":"🌍 Classique",
+
+    "monde-drapeaux":"🌍 Drapeaux"
+
+};
+
+
+/* =========================
+   CHANGER D'ONGLET
+========================= */
+
 function showTab(tab){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('ci').style.display = tab==='ci'?'block':'none';
-  document.getElementById('monde').style.display = tab==='monde'?'block':'none';
+
+    const ci = document.getElementById("ci");
+    const monde = document.getElementById("monde");
+
+    const tabCi = document.getElementById("tab-ci");
+    const tabMonde = document.getElementById("tab-monde");
+
+    if(tab === "ci"){
+
+        ci.style.display = "block";
+        monde.style.display = "none";
+
+        tabCi.classList.add("active");
+        tabMonde.classList.remove("active");
+
+    }else{
+
+        ci.style.display = "none";
+        monde.style.display = "block";
+
+        tabCi.classList.remove("active");
+        tabMonde.classList.add("active");
+
+    }
 }
+
+
+/* =========================
+   DÉMARRER UN THÈME
+========================= */
 
 function startGame(theme){
-  currentTheme = theme;
-  level = 1;
-  document.getElementById('home').style.display = 'none';
-  document.getElementById('game').style.display = 'block';
-  loadLevel();
+
+    currentTheme = theme;
+    level = 1;
+
+    document.getElementById("home").style.display = "none";
+    document.getElementById("game").style.display = "block";
+
+    loadLevel();
 }
+
+
+/* =========================
+   CHARGER UN NIVEAU
+========================= */
 
 function loadLevel(){
-  const lvl = allLevels[currentTheme][(level-1) % allLevels[currentTheme].length];
-  document.getElementById('lvl').innerText = level;
-  document.getElementById('img1').src = lvl.img1;
-  document.getElementById('img2').src = lvl.img2;
 
-  // Slots
-  const slots = document.getElementById('slots');
-  slots.innerHTML = '';
-  answer = [];
-  for(let i=0; i<lvl.word.length; i++){
-    slots.innerHTML += `<div class="slot"></div>`;
-    answer.push('');
-  }
+    const levels = allLevels[currentTheme];
 
-  // Clavier
-  const keys = document.getElementById('keys');
-  keys.innerHTML = '';
-  lvl.letters.split(' ').forEach(l=>{
-    keys.innerHTML += `<button class="key" onclick="addLetter('${l}',this)">${l}</button>`;
-  });
-}
+    const current = levels[level - 1];
 
-function addLetter(l, btn){
-  const i = answer.indexOf('');
-  if(i!==-1){
-    answer[i]=l;
-    document.querySelectorAll('.slot')[i].innerText=l;
-    btn.style.opacity=0.3;
-    if(answer.join('') === allLevels[currentTheme][(level-1)%allLevels[currentTheme].length].word){
-      coins+=50;
-      document.getElementById('coins').innerText=coins;
-      alert('Bravo! +50 pièces');
-      level++;
-      setTimeout(loadLevel,800);
+    if(!current){
+
+        alert("🎉 Félicitations ! Tu as terminé tous les niveaux de ce thème.");
+
+        goHome();
+
+        return;
     }
-  }
+
+
+    /* Niveau */
+
+    document.getElementById("lvl").innerText = level;
+
+
+    /* Pièces */
+
+    document.getElementById("coins").innerText = coins;
+
+
+    /* Nom thème */
+
+    document.getElementById("gameTheme").innerText =
+        themeNames[currentTheme];
+
+
+    /* Images */
+
+    document.getElementById("img1").src = current.img1;
+
+    document.getElementById("img2").src = current.img2;
+
+
+    /* Progression */
+
+    const percent =
+        ((level - 1) / levels.length) * 100;
+
+    document.getElementById("progress").style.width =
+        percent + "%";
+
+
+    /* Cases */
+
+    const slots =
+        document.getElementById("slots");
+
+    slots.innerHTML = "";
+
+    answer = [];
+
+    for(let i = 0; i < current.word.length; i++){
+
+        slots.innerHTML +=
+            `<div class="slot"></div>`;
+
+        answer.push("");
+
+    }
+
+
+    /* Clavier */
+
+    const keys =
+        document.getElementById("keys");
+
+    keys.innerHTML = "";
+
+    current.letters
+        .split(" ")
+        .forEach((letter,index)=>{
+
+            keys.innerHTML += `
+                <button
+                    class="key"
+                    onclick="addLetter('${letter}',this)"
+                    data-index="${index}"
+                >
+                    ${letter}
+                </button>
+            `;
+
+        });
+
+
+    /* Bouton suivant */
+
+    document.getElementById("nextBtn").style.display =
+        "none";
+
 }
+
+
+/* =========================
+   AJOUTER UNE LETTRE
+========================= */
+
+function addLetter(letter,btn){
+
+    const index =
+        answer.indexOf("");
+
+    if(index === -1) return;
+
+
+    answer[index] = letter;
+
+    document.querySelectorAll(".slot")[index]
+        .innerText = letter;
+
+
+    btn.classList.add("used");
+
+    btn.disabled = true;
+
+
+    /* Vérifier réponse */
+
+    const current =
+        allLevels[currentTheme][level - 1];
+
+
+    if(answer.join("") === current.word){
+
+        coins += 50;
+
+        document.getElementById("coins").innerText =
+            coins;
+
+        document.getElementById("progress").style.width =
+            ((level / allLevels[currentTheme].length) * 100) + "%";
+
+
+        document.getElementById("nextBtn").style.display =
+            "block";
+
+    }
+
+}
+
+
+/* =========================
+   EFFACER
+========================= */
+
+function deleteLetter(){
+
+    let index = -1;
+
+    for(let i = answer.length - 1; i >= 0; i--){
+
+        if(answer[i] !== ""){
+
+            index = i;
+
+            break;
+
+        }
+
+    }
+
+    if(index === -1) return;
+
+
+    answer[index] = "";
+
+    document.querySelectorAll(".slot")[index]
+        .innerText = "";
+
+
+    const buttons =
+        document.querySelectorAll(".key");
+
+    const letter =
+        document.querySelectorAll(".slot")[index];
+
+
+    /* Réactive une lettre correspondante */
+
+    for(const btn of buttons){
+
+        if(
+            btn.innerText.trim() ===
+            document.querySelectorAll(".slot")[index].innerText
+        ){
+
+            btn.classList.remove("used");
+            btn.disabled = false;
+            break;
+
+        }
+
+    }
+
+    /* Réactive intelligemment la première lettre utilisée */
+
+    const current =
+        allLevels[currentTheme][level - 1];
+
+    const usedLetters = {};
+
+    answer.forEach(l=>{
+
+        if(l){
+            usedLetters[l] =
+                (usedLetters[l] || 0) + 1;
+        }
+
+    });
+
+    buttons.forEach(btn=>{
+
+        const l = btn.innerText.trim();
+
+        if(
+            usedLetters[l] === undefined ||
+            usedLetters[l] === 0
+        ){
+
+            btn.classList.remove("used");
+            btn.disabled = false;
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   NIVEAU SUIVANT
+========================= */
+
+function nextLevel(){
+
+    const current =
+        allLevels[currentTheme][level - 1];
+
+
+    if(answer.join("") !== current.word){
+
+        return;
+
+    }
+
+
+    level++;
+
+
+    if(level > allLevels[currentTheme].length){
+
+        alert(
+            "🏆 Bravo ! Tu as terminé tous les niveaux de ce thème !"
+        );
+
+        goHome();
+
+        return;
+
+    }
+
+
+    loadLevel();
+
+}
+
+
+/* =========================
+   RETOUR ACCUEIL
+========================= */
 
 function goHome(){
-  document.getElementById('game').style.display = 'none';
-  document.getElementById('home').style.display = 'block';
+
+    document.getElementById("game").style.display =
+        "none";
+
+    document.getElementById("home").style.display =
+        "block";
+
 }
+
 </script>
+
 </body>
 </html>
